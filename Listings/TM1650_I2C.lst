@@ -1,0 +1,27 @@
+C51 COMPILER V9.60.7.0   TM1650_I2C                                                        08/28/2024 18:58:45 PAGE 1   
+
+
+C51 COMPILER V9.60.7.0, COMPILATION OF MODULE TM1650_I2C
+OBJECT MODULE PLACED IN .\Objects\TM1650_I2C.obj
+COMPILER INVOKED BY: D:\tool chain\keil c51 v6\C51\BIN\C51.EXE TM1650_I2C.c OPTIMIZE(8,SPEED) BROWSE INCDIR(.\Device\Inc
+                    -lude;.\StdDriver\inc;.\tm1650;.\RTX Tiny2\inc) DEFINE(FOSC_240000) DEBUG OBJECTEXTEND PRINT(.\Listings\TM1650_I2C.lst) T
+                    -ABS(2) OBJECT(.\Objects\TM1650_I2C.obj)
+
+line level    source
+
+   1          #include "MS51_16K.h"
+   2          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   ----    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

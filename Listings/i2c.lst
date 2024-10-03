@@ -1,0 +1,240 @@
+C51 COMPILER V9.60.7.0   I2C                                                               09/07/2024 19:29:27 PAGE 1   
+
+
+C51 COMPILER V9.60.7.0, COMPILATION OF MODULE I2C
+OBJECT MODULE PLACED IN .\Objects\i2c.obj
+COMPILER INVOKED BY: D:\tool chain\keil c51 v6\C51\BIN\C51.EXE StdDriver\src\i2c.c LARGE OPTIMIZE(8,SPEED) BROWSE INCDIR
+                    -(.\Device\Include;.\StdDriver\inc;.\RTX Tiny2\inc;.\TM1650;.\Application) DEFINE(FOSC_240000) DEBUG OBJECTEXTEND SYMBOLS
+                    - PRINT(.\Listings\i2c.lst) TABS(2) OBJECT(.\Objects\i2c.obj)
+
+line level    source
+
+   1          /*--------------------------------------------------------------------------------------------------------
+             --*/
+   2          /*                                                                                                        
+             - */
+   3          /* Copyright(c) 2020 Nuvoton Technology Corp. All rights reserved.                                        
+             - */
+   4          /*                                                                                                        
+             - */
+   5          /*--------------------------------------------------------------------------------------------------------
+             --*/
+   6          
+   7          #include "MS51_16K.h"
+   8          
+   9          /**
+  10            * @brief      Enable specify I2C controller and set divider
+  11            * @param[in]  u8I2CSel:  Specify I2C port
+  12            *                  - \ref I2C0
+  13            *                  - \ref I2C1
+  14            * @param[in]  u32SYSCLK: Define Fsys clock value in Hz.
+  15            *                  - \ref 8000000
+  16            * @param[in]  u32I2CCLK: The target I2C bus clock in Hz. Use HIRC the I2C clock is from 23473 ~ 2000000
+  17            * @return     None
+  18            * @details    The function enable the specify I2C controller and set proper clock divider
+  19            *             in I2C CLOCK DIVIDED REGISTER (I2CLK) according to the target I2C Bus clock.
+  20            *             I2C bus clock = PCLK / (4*(u32I2CCLK+1).
+  21            * @exmaple :  I2C_Open(24000000,100000);
+  22            */
+  23          void I2C_Master_Open(unsigned long u32SYSCLK, unsigned long u32I2CCLK)
+  24          {
+  25   1          SFRS = 0x00;
+  26   1          I2CLK = (u32SYSCLK/4/u32I2CCLK-1); 
+  27   1          set_I2CON_I2CEN;
+  28   1      
+  29   1      }
+  30          
+  31          /**
+  32            * @brief      Enable specify I2C Slave address
+  33            * @param[in]  u8I2CSel:  Specify I2C port
+  34            *                  - \ref I2C0
+  35            *                  - \ref I2C1
+  36            * @param[in]  u32SYSCLK: Define Fsys clock value in Hz.
+  37            *                  - \ref 8000000
+  38            * @param[in]  u32I2CCLK: The target I2C bus clock in Hz. Use HIRC the I2C clock is from 23473 ~ 2000000
+  39            * @return     None
+  40            * @details    The function enable the specify I2C controller and set proper clock divider
+  41            *             in I2C CLOCK DIVIDED REGISTER (I2CLK) according to the target I2C Bus clock.
+  42            *             I2C bus clock = PCLK / (4*(u32I2CCLK+1).
+  43            * @exmaple :  I2C_Open(0xA4);
+  44            */
+  45          void I2C_Slave_Open( unsigned char u8SlaveAddress0)
+  46          {
+  47   1              SFRS = 0; 
+  48   1              I2ADDR = u8SlaveAddress0; 
+C51 COMPILER V9.60.7.0   I2C                                                               09/07/2024 19:29:27 PAGE 2   
+
+  49   1              set_I2CON_I2CEN;
+  50   1              set_I2CON_AA;
+  51   1      }
+  52          /**
+  53            * @brief      Disable I2C function
+  54            * @param[in]  u8I2CSel:  Specify I2C port
+  55            *                  - \ref I2C0
+  56            *                  - \ref I2C1
+  57            * @exmaple :  I2C0_Close(I2C0);
+  58          */
+  59          void I2C_Close(void)
+  60          {
+  61   1          SFRS = 0;
+  62   1          clr_I2CON_I2CEN;
+  63   1      }
+  64          
+  65          /**
+  66            * @brief      Enable specify I2C controller interrupt, also need enable globle interrupt in main loop.
+  67            * @param[in]  u8I2CSel:  Specify I2C port
+  68            *                  - \ref I2C0
+  69            *                  - \ref I2C1
+  70            * @param[in]  u8I2CStatus:  Specify I2C interrupt status
+  71            *                  - \ref Enable
+  72            *                  - \ref Disable
+  73            * @exmaple :  I2C_Interrupt();
+  74          */
+  75          void I2C_Interrupt(unsigned char u8I2CStatus)
+  76          {
+  77   1          SFRS = 0;
+  78   1               switch (u8I2CStatus)
+  79   1               {
+  80   2                 case Enable: ENABLE_I2C_INTERRUPT; break;
+  81   2                 case Disable: DISABLE_I2C_INTERRUPT; break;
+  82   2               }
+  83   1      }
+  84          
+  85          /**
+  86            * @brief      Get I2C bus status value
+  87            * @param[in]  u8I2CSel:  Specify I2C port
+  88            * @param[in]  u8I2CSel:  Specify I2C port
+  89            *                  - \ref I2C0
+  90            *                  - \ref I2C1
+  91            * @return     I2C status data 
+  92            * @exmaple :  I2C_GetStatus(I2C0);
+  93          */
+  94          unsigned char I2C_GetStatus(void)
+  95          {
+  96   1          unsigned char u8i2cstat;
+  97   1          SFRS = 0;
+  98   1           u8i2cstat=I2STAT;
+  99   1          return (u8i2cstat);
+ 100   1      }
+ 101          
+ 102          /**
+ 103           * @brief      Enable Time-out Function with support long time-out
+ 104           * @param[in]  u8I2CSel:  Specify I2C port
+ 105            *                  - \ref I2C0
+ 106            *                  - \ref I2C1
+ 107            * @param[in]  u8I2CTRStatus:  Specify I2C Timer status
+ 108            *                  - \ref Enable
+ 109            *                  - \ref Disable
+ 110           * @return     None
+C51 COMPILER V9.60.7.0   I2C                                                               09/07/2024 19:29:27 PAGE 3   
+
+ 111           * @Note       This function enable time-out function and configure DIV4 to support longer time-out.
+ 112           * @example    I2C_Timeout(Enable);
+ 113           */
+ 114          void I2C_Timeout( unsigned char u8I2CTRStatus )
+ 115          {
+ 116   1              switch (u8I2CTRStatus)
+ 117   1              {
+ 118   2                case Enable: set_I2TOC_DIV; set_I2TOC_I2TOCEN; break;
+ 119   2                case Disable: clr_I2TOC_I2TOCEN; break;
+ 120   2              }
+ 121   1      }
+ 122          
+ 123          
+ 124          void I2C_ClearTimeoutFlag(void)
+ 125          {
+ 126   1          SFRS = 0;
+ 127   1          I2TOC&=0xFE; ;
+ 128   1      }
+ 129          
+ 130          /**
+ 131           * @brief      Special design for 8051 I2C SI check
+ 132           * @param[in]  none
+ 133           * @return     None
+ 134           * @details    This function setting the slave address mask bit.
+ 135           */
+ 136          void I2C0_SI_Check(void)
+ 137          {
+ 138   1          clr_I2CON_SI;
+ 139   1          
+ 140   1          while(I2CON&SET_BIT3)     /* while SI==0; */
+ 141   1          {
+ 142   2              if(I2STAT == 0x00)
+ 143   2              {
+ 144   3                  set_I2CON_STO;
+ 145   3              }
+ 146   2              SI = 0;
+ 147   2              if(!SI)
+ 148   2              {
+ 149   3                  clr_I2CON_I2CEN;
+ 150   3                  set_I2CON_I2CEN;
+ 151   3                  clr_I2CON_SI;
+ 152   3              } 
+ 153   2          }
+ 154   1      }
+C51 COMPILER V9.60.7.0   I2C                                                               09/07/2024 19:29:27 PAGE 4   
+
+NAME                                    CLASS   MSPACE  TYPE    OFFSET  SIZE
+====                                    =====   ======  ====    ======  ====
+
+
+uint16_t . . . . . . . . . . . . . . .  TYPEDEF  -----  U_INT    -----  2
+P0 . . . . . . . . . . . . . . . . . .  SFR      DATA   U_CHAR   0080H  1
+P1 . . . . . . . . . . . . . . . . . .  SFR      DATA   U_CHAR   0090H  1
+AA . . . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      00C2H  1
+P2 . . . . . . . . . . . . . . . . . .  SFR      DATA   U_CHAR   00A0H  1
+P3 . . . . . . . . . . . . . . . . . .  SFR      DATA   U_CHAR   00B0H  1
+_I2C_Master_Open . . . . . . . . . . .  PUBLIC   CODE   PROC     0000H  -----
+  u32SYSCLK. . . . . . . . . . . . . .  AUTO     DATA   U_LONG   0004H  4
+  u32I2CCLK. . . . . . . . . . . . . .  AUTO     XDATA  U_LONG   0004H  4
+PWMCON0. . . . . . . . . . . . . . . .  SFR      DATA   U_CHAR   00D8H  1
+_I2C_Timeout . . . . . . . . . . . . .  PUBLIC   CODE   PROC     0000H  -----
+  u8I2CTRStatus. . . . . . . . . . . .  * REG *  DATA   U_CHAR   0007H  1
+IE . . . . . . . . . . . . . . . . . .  SFR      DATA   U_CHAR   00A8H  1
+_I2C_Slave_Open. . . . . . . . . . . .  PUBLIC   CODE   PROC     0000H  -----
+  u8SlaveAddress0. . . . . . . . . . .  * REG *  DATA   U_CHAR   0007H  1
+size_t . . . . . . . . . . . . . . . .  TYPEDEF  -----  U_INT    -----  2
+I2ADDR . . . . . . . . . . . . . . . .  SFR      DATA   U_CHAR   00C1H  1
+I2C_Close. . . . . . . . . . . . . . .  PUBLIC   CODE   PROC     0000H  -----
+IP . . . . . . . . . . . . . . . . . .  SFR      DATA   U_CHAR   00B8H  1
+SI . . . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      00C3H  1
+UINT32 . . . . . . . . . . . . . . . .  TYPEDEF  -----  U_LONG   -----  4
+UINT16 . . . . . . . . . . . . . . . .  TYPEDEF  -----  U_INT    -----  2
+I2C0_SI_Check. . . . . . . . . . . . .  PUBLIC   CODE   PROC     0000H  -----
+SCON . . . . . . . . . . . . . . . . .  SFR      DATA   U_CHAR   0098H  1
+TCON . . . . . . . . . . . . . . . . .  SFR      DATA   U_CHAR   0088H  1
+I2STAT . . . . . . . . . . . . . . . .  SFR      DATA   U_CHAR   00BDH  1
+SFRS . . . . . . . . . . . . . . . . .  SFR      DATA   U_CHAR   0091H  1
+SCON_1 . . . . . . . . . . . . . . . .  SFR      DATA   U_CHAR   00F8H  1
+I2C_GetStatus. . . . . . . . . . . . .  PUBLIC   CODE   PROC     0000H  -----
+  u8i2cstat. . . . . . . . . . . . . .  * REG *  DATA   U_CHAR   0007H  1
+uint8_t. . . . . . . . . . . . . . . .  TYPEDEF  -----  U_CHAR   -----  1
+I2CEN. . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      00C6H  1
+EIE. . . . . . . . . . . . . . . . . .  SFR      DATA   U_CHAR   009BH  1
+I2CLK. . . . . . . . . . . . . . . . .  SFR      DATA   U_CHAR   00BEH  1
+ADCCON0. . . . . . . . . . . . . . . .  SFR      DATA   U_CHAR   00E8H  1
+I2CON. . . . . . . . . . . . . . . . .  SFR      DATA   U_CHAR   00C0H  1
+BIT. . . . . . . . . . . . . . . . . .  TYPEDEF  -----  BIT      -----  1
+I2TOC. . . . . . . . . . . . . . . . .  SFR      DATA   U_CHAR   00BFH  1
+T2CON. . . . . . . . . . . . . . . . .  SFR      DATA   U_CHAR   00C8H  1
+I2C_ClearTimeoutFlag . . . . . . . . .  PUBLIC   CODE   PROC     0000H  -----
+_I2C_Interrupt . . . . . . . . . . . .  PUBLIC   CODE   PROC     0000H  -----
+  u8I2CStatus. . . . . . . . . . . . .  * REG *  DATA   U_CHAR   0007H  1
+STO. . . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      00C4H  1
+UINT8. . . . . . . . . . . . . . . . .  TYPEDEF  -----  U_CHAR   -----  1
+PSW. . . . . . . . . . . . . . . . . .  SFR      DATA   U_CHAR   00D0H  1
+uint32_t . . . . . . . . . . . . . . .  TYPEDEF  -----  U_LONG   -----  4
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    125    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----       8
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

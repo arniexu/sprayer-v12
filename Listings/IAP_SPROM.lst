@@ -1,0 +1,188 @@
+C51 COMPILER V9.60.7.0   IAP_SPROM                                                         09/15/2024 17:55:04 PAGE 1   
+
+
+C51 COMPILER V9.60.7.0, COMPILATION OF MODULE IAP_SPROM
+OBJECT MODULE PLACED IN .\Objects\IAP_SPROM.obj
+COMPILER INVOKED BY: D:\tool chain\keil c51 v6\C51\BIN\C51.EXE ..\spray\StdDriver\src\IAP_SPROM.c LARGE OPTIMIZE(0,SPEED
+                    -) BROWSE INCDIR(.\Device\Include;.\StdDriver\inc;.\RTX Tiny2\inc;.\TM1650;.\Application) DEFINE(FOSC_240000) DEBUG OBJEC
+                    -TEXTEND SYMBOLS PRINT(.\Listings\IAP_SPROM.lst) TABS(2) OBJECT(.\Objects\IAP_SPROM.obj)
+
+line level    source
+
+   1          /*--------------------------------------------------------------------------------------------------------
+             --*/
+   2          /*                                                                                                        
+             - */
+   3          /* Copyright(c) 2020 nuvoton Technology Corp. All rights reserved.                                        
+             - */
+   4          /*                                                                                                        
+             - */
+   5          /*--------------------------------------------------------------------------------------------------------
+             --*/
+   6          
+   7          /*********************************************************************************************************
+             -***
+   8            Website: http://www.nuvoton.com
+   9            E-Mail : MicroC-8bit@nuvoton.com
+  10          **********************************************************************************************************
+             -**/
+  11          
+  12          #include "MS51_32K.h"
+  13          
+  14          unsigned char xdata IAPSPDataBuf[127];
+  15          
+  16          
+  17          
+  18          /**
+  19           * @brief       Erase LDROM
+  20           * @param       u16IAPStartAddress define LDROM area start address
+  21           * @param       u16IAPDataSize define LDROM need be erase bytes size
+  22           * @return      none
+  23           * @details     Page erase LDROM area base on data start address
+  24           * @example     Erase_LDROM(0x0000,2048);
+  25           */
+  26          void Erase_SPROM(void)
+  27          {
+  28   1      
+  29   1          set_CHPCON_IAPEN;                    // Disable IAP    set_CHPCON_IAPEN;                    // Enable 
+             -IAP function
+*** ERROR C202 IN LINE 29 OF ..\spray\StdDriver\src\IAP_SPROM.c: 'set_CHPCON_IAPEN': undefined identifier
+  30   1          set_IAPUEN_SPMEN;                    //  SPROM memory modify Enable
+*** ERROR C202 IN LINE 30 OF ..\spray\StdDriver\src\IAP_SPROM.c: 'set_IAPUEN_SPMEN': undefined identifier
+  31   1          set_IAPUEN_SPUEN;                    //  SPROM modify enable
+*** ERROR C202 IN LINE 31 OF ..\spray\StdDriver\src\IAP_SPROM.c: 'set_IAPUEN_SPUEN': undefined identifier
+  32   1          IAPFD = 0xFF;                        // IMPORTANT !! To erase function must setting IAPFD = 0xFF
+  33   1          IAPCN = PAGE_ERASE_SPROM;
+*** ERROR C202 IN LINE 33 OF ..\spray\StdDriver\src\IAP_SPROM.c: 'PAGE_ERASE_SPROM': undefined identifier
+  34   1      
+  35   1          IAPAL = 0x80;
+  36   1          IAPAH = 0x01;
+  37   1          set_IAPTRG_IAPGO;
+*** ERROR C202 IN LINE 37 OF ..\spray\StdDriver\src\IAP_SPROM.c: 'set_IAPTRG_IAPGO': undefined identifier
+  38   1      
+  39   1          clr_IAPUEN_SPUEN;                    //  SPROM modify disable
+*** ERROR C202 IN LINE 39 OF ..\spray\StdDriver\src\IAP_SPROM.c: 'clr_IAPUEN_SPUEN': undefined identifier
+C51 COMPILER V9.60.7.0   IAP_SPROM                                                         09/15/2024 17:55:04 PAGE 2   
+
+  40   1          clr_CHPCON_IAPEN;                    // Disable IAP
+*** ERROR C202 IN LINE 40 OF ..\spray\StdDriver\src\IAP_SPROM.c: 'clr_CHPCON_IAPEN': undefined identifier
+  41   1      }
+  42          
+  43          /**
+  44           * @brief       LDROM blank check
+  45           * @param       u16IAPStartAddress define LDROM area start address
+  46           * @param       u16IAPDataSize define LDROM need be erase bytes size
+  47           * @return      none
+  48           * @details     Check each byte of LDROM is FFH or not.
+  49           * @example      LDROM_BlanckCheck(0x0000,2048);
+  50           */
+  51          void Erase_Verify_SPROM(unsigned int u16IAPDataSize)
+  52          {
+  53   1          unsigned int u16Count;
+  54   1          set_CHPCON_IAPEN;
+*** ERROR C202 IN LINE 54 OF ..\spray\StdDriver\src\IAP_SPROM.c: 'set_CHPCON_IAPEN': undefined identifier
+  55   1          set_IAPUEN_SPMEN;
+*** ERROR C202 IN LINE 55 OF ..\spray\StdDriver\src\IAP_SPROM.c: 'set_IAPUEN_SPMEN': undefined identifier
+  56   1      
+  57   1          IAPAH = 0x01;
+  58   1          IAPAL = 0x80;
+  59   1      
+  60   1          IAPCN = BYTE_READ_SPROM;
+*** ERROR C202 IN LINE 60 OF ..\spray\StdDriver\src\IAP_SPROM.c: 'BYTE_READ_SPROM': undefined identifier
+  61   1      
+  62   1          for (u16Count = 0; u16Count < u16IAPDataSize; u16Count++)
+  63   1          {
+  64   2              IAPFD = 0x00;
+  65   2              set_IAPTRG_IAPGO;
+*** ERROR C202 IN LINE 65 OF ..\spray\StdDriver\src\IAP_SPROM.c: 'set_IAPTRG_IAPGO': undefined identifier
+  66   2      
+  67   2              if (IAPFD != 0xFF)
+  68   2                  break;
+  69   2      
+  70   2              IAPAL++;
+  71   2      
+  72   2          }
+  73   1      
+  74   1          clr_CHPCON_IAPEN;
+*** ERROR C202 IN LINE 74 OF ..\spray\StdDriver\src\IAP_SPROM.c: 'clr_CHPCON_IAPEN': undefined identifier
+  75   1      }
+  76          
+  77          /**
+  78           * @brief       LDROM program loop
+  79           * @param       u16IAPStartAddress define LDROM area start address
+  80           * @param       u16IAPDataSize define LDROM need be erase bytes size
+  81           * @return      none
+  82           * @details     Copy IAPDataBuf to LDROM
+  83           * @example      LDROM_Program(0x0000,1024);
+  84           */
+  85          void Program_SPROM(unsigned int u16IAPDataSize)
+  86          {
+  87   1          unsigned int u16Count;
+  88   1      
+  89   1          set_CHPCON_IAPEN;
+*** ERROR C202 IN LINE 89 OF ..\spray\StdDriver\src\IAP_SPROM.c: 'set_CHPCON_IAPEN': undefined identifier
+  90   1          set_IAPUEN_SPMEN;                    //  SPROM memory modify Enable
+*** ERROR C202 IN LINE 90 OF ..\spray\StdDriver\src\IAP_SPROM.c: 'set_IAPUEN_SPMEN': undefined identifier
+  91   1          set_IAPUEN_SPUEN;                    //  SPROM modify enable
+*** ERROR C202 IN LINE 91 OF ..\spray\StdDriver\src\IAP_SPROM.c: 'set_IAPUEN_SPUEN': undefined identifier
+  92   1          IAPAH = 0x01;
+C51 COMPILER V9.60.7.0   IAP_SPROM                                                         09/15/2024 17:55:04 PAGE 3   
+
+  93   1          IAPAL = 0x80;
+  94   1          IAPCN = BYTE_PROGRAM_SPROM;
+*** ERROR C202 IN LINE 94 OF ..\spray\StdDriver\src\IAP_SPROM.c: 'BYTE_PROGRAM_SPROM': undefined identifier
+  95   1      
+  96   1          for (u16Count = 0; u16Count < u16IAPDataSize; u16Count++)
+  97   1          {
+  98   2              IAPFD = IAPSPDataBuf[u16Count];
+  99   2              set_IAPTRG_IAPGO;
+*** ERROR C202 IN LINE 99 OF ..\spray\StdDriver\src\IAP_SPROM.c: 'set_IAPTRG_IAPGO': undefined identifier
+ 100   2              IAPAL++;
+ 101   2          }
+ 102   1      
+ 103   1          clr_IAPUEN_SPUEN;                    //  SPROM modify disable
+*** ERROR C202 IN LINE 103 OF ..\spray\StdDriver\src\IAP_SPROM.c: 'clr_IAPUEN_SPUEN': undefined identifier
+ 104   1          clr_CHPCON_IAPEN;
+*** ERROR C202 IN LINE 104 OF ..\spray\StdDriver\src\IAP_SPROM.c: 'clr_CHPCON_IAPEN': undefined identifier
+ 105   1      }
+ 106          
+ 107          
+ 108          /**
+ 109           * @brief       LDROM check loop
+ 110           * @param       u16IAPStartAddress define LDROM area start address
+ 111           * @param       u16IAPDataSize define LDROM need be erase bytes size
+ 112           * @return      none
+ 113           * @details     Check with XRAM IAPDataBuf with LDROM
+ 114           * @example      LDROM_Program_Verify(0x0000,1024);
+ 115           */
+ 116          void Read_Verify_SPROM(unsigned int u16IAPDataSize)
+ 117          {
+ 118   1          unsigned int u16Count;
+ 119   1      
+ 120   1          set_CHPCON_IAPEN;
+*** ERROR C202 IN LINE 120 OF ..\spray\StdDriver\src\IAP_SPROM.c: 'set_CHPCON_IAPEN': undefined identifier
+ 121   1          set_IAPUEN_SPMEN;
+*** ERROR C202 IN LINE 121 OF ..\spray\StdDriver\src\IAP_SPROM.c: 'set_IAPUEN_SPMEN': undefined identifier
+ 122   1      
+ 123   1          IAPAH = 0x01;
+ 124   1          IAPAL = 0x80;
+ 125   1          IAPCN = BYTE_READ_SPROM;
+*** ERROR C202 IN LINE 125 OF ..\spray\StdDriver\src\IAP_SPROM.c: 'BYTE_READ_SPROM': undefined identifier
+ 126   1      
+ 127   1          for (u16Count = 0; u16Count < u16IAPDataSize; u16Count++)
+ 128   1          {
+ 129   2              IAPFD = 0x00;
+ 130   2              set_IAPTRG_IAPGO;
+*** ERROR C202 IN LINE 130 OF ..\spray\StdDriver\src\IAP_SPROM.c: 'set_IAPTRG_IAPGO': undefined identifier
+ 131   2      
+ 132   2              if (IAPFD != IAPSPDataBuf[u16Count])
+ 133   2                  break;
+ 134   2      
+ 135   2              IAPAL++;
+ 136   2          }
+ 137   1      
+ 138   1          clr_CHPCON_IAPEN;
+*** ERROR C202 IN LINE 138 OF ..\spray\StdDriver\src\IAP_SPROM.c: 'clr_CHPCON_IAPEN': undefined identifier
+ 139   1      }
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  24 ERROR(S)
