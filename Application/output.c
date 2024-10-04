@@ -53,3 +53,41 @@ unsigned char external_button_poll_blocked(void)
 		}
 		return 0;
 }
+
+unsigned char external_start_valid_blocked()
+{
+	if (0 == start_ex_button)
+	{
+		Timer1_Delay2Dot54ms_blocked(get_Timer1_Systemtick(), 1);
+		if (0 == start_ex_button)
+			return TRUE;
+	}
+	return FALSE;
+}
+
+unsigned char external_stop_valid_blocked()
+{
+	unsigned int i = 0;
+	if (0 == stop_ex_button)
+	{
+		for(i = 0; i<100; i++);
+		//Timer1_Delay2Dot54ms_blocked(get_Timer1_Systemtick(), 1);
+		if (0 == stop_ex_button)
+			return TRUE;
+	}
+	return FALSE;
+}
+
+unsigned char external_collaborate_valid_blocked()
+{
+	unsigned int i = 0;
+	if (0 == collaborate_ex_button)
+	{
+		for(i = 0; i<100; i++);
+		//Timer1_Delay2Dot54ms_blocked(get_Timer1_Systemtick(), 1);
+		if (0 == collaborate_ex_button) {
+			return TRUE;
+		}
+	}
+	return FALSE;
+}

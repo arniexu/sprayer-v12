@@ -40,7 +40,6 @@ uart 0 is used for printf
 #define STOP_REASON_WATER_SHORT 2
 
 struct TM1650TypeDef tm1650;
-struct buttonState prevButton;
 unsigned char button;
 unsigned char displayBuffer[4] ={0};
 #define SOLID_ON 0
@@ -67,7 +66,7 @@ unsigned int stop_multiplier = 0;
 unsigned int stop_counter = 0;
 extern unsigned int tButton;
 unsigned int stopReason = 0;
-unsigned int level_water_short = 0;
+unsigned int level_water_short = 1;
 unsigned int delay_water_short = 0;
 unsigned int flag_collaborate = 0;
 
@@ -105,8 +104,6 @@ unsigned char left_mode = LEFT_TIME_EFFECTIVE_MODE;
 
 unsigned int spraying = SPRAY_IDLE;
 
-unsigned int g_button = 0;
-
 unsigned char start_spray();
 unsigned char stop_spray();
 void beeper_once();
@@ -119,18 +116,20 @@ unsigned char readRightMode(void);
 unsigned char readWaterShortLevel(void);
 unsigned char readWaterShortDelay(void);
 void writeFlash();
-
+void left_business_logic();
+void right_business_logic();
 void beeper_2hz(void);
 void beeper_2hz_stop(void);
 
 
 unsigned char external_water_short_blocked()
 {
+	unsigned int i = 0;
 	if (water_short_ex_button == level_water_short)
 	{
-			Timer1_Delay2Dot54ms_blocked(get_Timer1_Systemtick(), 1);
-			if (water_short_ex_button == level_water_short)
-				return level_water_short;
+		for (i = 0; i<100; i++);
+		if (water_short_ex_button == level_water_short)
+			return level_water_short;
 	}
 	return !level_water_short;
 }
@@ -220,6 +219,7 @@ void left_business_logic()
 				break;
 			case LEFT_FUNCTION_2_MODE:
 				displayBuffer[0] = 'F';
+
 				displayBuffer[1] = '2';
 				blinkFlag[0] = FALSE;
 				blinkFlag[1] = TRUE;
@@ -362,7 +362,7 @@ void left_business_logic()
 				{
 					display_when_water_is_back();
 				}
-				else
+				else // spraying is stopping
 				{
 					blinkFlag[0] = blinkFlag[1] = FALSE;
 					displayBuffer[0] = 0;
@@ -451,19 +451,19 @@ unsigned int water_is_not_short()
 		display_when_water_is_short();
 		water_present = FALSE;
 		beeper_2hz();
+		// 缺水状态下不能被任意信号停止，无线按钮仅用于测试
 		if (tButton == RF_STOP_BUTTON
-		|| RF_STOP_BUTTON == external_button_poll_blocked()
-		|| (flag_collaborate && collaborate_ex_button == 1))
+			|| TRUE == external_stop_valid_blocked()
+			|| (flag_collaborate && collaborate_ex_button == 1)) // waiting can be forcibly stopped
 		{
-
 			beeper_once();
-			tButton = 0;
+			tButton = (RF_STOP_BUTTON == tButton ? 0 : tButton);
 			return FALSE;
 		}
 		else if(tButton == RF_START_BUTTON)
 		{
 			beeper_once();
-			tButton = 0;
+			tButton = (RF_START_BUTTON == tButton ? 0 : tButton);
 		}
 	}
 	beeper_2hz_stop();
@@ -479,6 +479,7 @@ unsigned int water_is_not_short()
 		while(0 < delay_water_short)
 		{
 			unsigned int temp = 0;
+			unsigned int prev = 0;
 			display_when_water_is_back();
 			temp = get_Timer1_Systemtick();
 			while (get_Timer1_Systemtick() - temp < 400) {
@@ -487,9 +488,19 @@ unsigned int water_is_not_short()
 					return TRUE;
 				}
 				else if (tButton == RF_STOP_BUTTON
-				|| RF_STOP_BUTTON == external_button_poll_blocked())
+					|| external_stop_valid_blocked())
 				{
+					beeper_once();
+					tButton = (tButton == RF_STOP_BUTTON ? 0 : tButton);
 					return FALSE;
+				}
+				else if (tButton == RF_START_BUTTON
+					|| (external_start_valid_blocked() && !external_stop_valid_blocked())
+					|| (external_collaborate_valid_blocked() && !external_stop_valid_blocked()))
+				{
+					beeper_once();
+					tButton = (tButton == RF_START_BUTTON ? 0 : tButton);
+					return TRUE;
 				}
 				Timer1_Delay2Dot54ms_blocked(get_Timer1_Systemtick(), 1);
 			}
@@ -531,17 +542,18 @@ unsigned char start_spray(void)
 					relay_ineffective();
 					stopReason = STOP_REASON_USER_ABORT;
 					start_counter = start_counter_backup;
+					tButton = (tButton == RF_STOP_BUTTON ? 0 : tButton);
 					Write_DATAFLASH_BYTE(DATA_START_ADDR+START_COUNTER_OFFSET, start_counter%100);
 					return FALSE;
 				}
 				else if(tButton == RF_START_BUTTON)
 				{
 					beeper_once();
-					tButton = 0;
+					tButton = (tButton == RF_START_BUTTON ? 0 : tButton);
 				}
 				else if(level_water_short == external_water_short_blocked())
 				{
-					relay_ineffective();
+					relay_ineffective(); 
 					stopReason = STOP_REASON_WATER_SHORT;
 					start_counter = start_counter_backup;
 					Write_DATAFLASH_BYTE(DATA_START_ADDR+START_COUNTER_OFFSET, start_counter%100);
@@ -773,6 +785,7 @@ void right_business_logic()
 				}
 				else if(spraying == SPRAY_WAITING)
 				{
+					// 缺水等待状态时，看代码是可以支持设置 
 					display_when_water_is_short();
 				}
 				else if (spraying == SPRAY_DELAYING)
@@ -847,18 +860,13 @@ void business_logic() _task_ 2
 	unsigned char previous = 0;
 	gpio_button_init_poll();
 	input_signal_init();
-	start_counter = readStartCounter()%100;
-	stop_counter = readStopCounter()%100;
-	start_multiplier = readStartMultiplier();
-	stop_multiplier = readStopMultiplier();
-	level_water_short = readWaterShortLevel()%2;
-	delay_water_short = readWaterShortDelay()%100;
 	left_business_logic();
 	right_business_logic();
+	writeFlash();
 	while(1)
 	{
-		button = gpio_button_poll_blocked(previous);
-		if (isButtonCodeValid(button) && spraying == SPRAY_IDLE)
+		button = gpio_button_poll_blocked(previous);	
+		if (isButtonCodeValid(button) && (spraying == SPRAY_IDLE || spraying == SPRAY_WAITING))
 		{
 			if (previous != button)  // button is not pressed consecutively
 				beeper_once();
@@ -875,7 +883,7 @@ void business_logic() _task_ 2
 				learn_code();
 			}
 		}
-		//previous = button;
+		previous = button;
 	}
 }
 
@@ -885,12 +893,6 @@ void refresh_led (void) _task_ 1
 	unsigned int i = 0;
 	// start a timer as system tick handler, time out every 1ms 
 	// count the number of	
-	start_counter = readStartCounter()%100;
-	stop_counter = readStopCounter()%100;
-	start_multiplier = readStartMultiplier();
-	stop_multiplier = readStopMultiplier();
-	level_water_short = readWaterShortLevel();
-	delay_water_short = readWaterShortDelay();
 	IIC_Init();
 	tm1650_displayOn(&tm1650);
 	while(1)
@@ -1191,10 +1193,13 @@ void refresh_led (void) _task_ 1
 				beeper_signal_ineffective();	
 			}
 		}
-		//os_switch_task();
+		//Timer1_Delay2Dot54ms_blocked(get_Timer1_Systemtick(), 10);
+		os_switch_task();
 	}
 }
 
+/* rf button starts the cycle immediately 
+   stop*/
 // start up task to bring other tasks up
 int startup_task (void) _task_ 0
 {
@@ -1204,6 +1209,12 @@ int startup_task (void) _task_ 0
 	enable_Timer2_IC2();
 	start_Timer1_Systemtick();
 	input_signal_init();
+	start_counter = readStartCounter()%100;
+	stop_counter = readStopCounter()%100;
+	start_multiplier = readStartMultiplier();
+	stop_multiplier = readStopMultiplier();
+	level_water_short = readWaterShortLevel();
+	delay_water_short = readWaterShortDelay();
 	beeper = 0;
 	os_create_task(1);
 	os_create_task(2);
@@ -1217,18 +1228,16 @@ int startup_task (void) _task_ 0
 		{
 			enable_Timer2_IC2();
 		}
-		//spraying = SPRAY_IDLE;
-		//printf("\n Hello world!");
-		//printf("\n Hello world!\r\n");
 		if (right_mode == RIGHT_TIME_EFFECTIVE_MODE
 			&& left_mode == LEFT_TIME_EFFECTIVE_MODE)
 		{
 			if (level_water_short != external_water_short_blocked())
-			{
+			{	// 不缺水
 				beeper_2hz_stop();
 				spraying = SPRAY_IDLE;
 				if (tButton == RF_START_BUTTON  // start is pressed from the remote controller
-					|| RF_START_BUTTON == external_button_poll_blocked()) 
+					|| (TRUE == external_start_valid_blocked()	// external start signal is valid and external stop signal is not valid
+					&& FALSE == external_stop_valid_blocked()))
 				{
 					beeper_once();
 					tButton = 0;
@@ -1242,7 +1251,8 @@ int startup_task (void) _task_ 0
 					}
 					spraying = SPRAY_IDLE;
 				}
-				else if(collaborate_ex_button == 0)
+				else if(collaborate_ex_button == 0
+					&& FALSE == external_stop_valid_blocked())
 				{
 					beeper_once();
 					flag_collaborate = 1;
@@ -1257,28 +1267,43 @@ int startup_task (void) _task_ 0
 					flag_collaborate = 0;
 					spraying = SPRAY_IDLE;
 				}
+				else if(tButton == RF_STOP_BUTTON)
+				{
+					beeper_once();
+					tButton = 0;
+				}
 			}
 			else 
 			{
+				// 缺水
 				relay_ineffective();
 				display_when_water_is_short();
 				spraying = SPRAY_WAITING;
 				beeper_2hz();
 			}
-		}
-		if(tButton != 0)
+		}	// 右侧或者左侧还在设置时间
+		else if(tButton != 0)
 		{
 			beeper_once();
 			tButton = 0;
 		}
-		os_switch_task();
+		//os_switch_task();
 	}
 }
 
 void beeper_once(void) 
 {
-	beeper_start = get_Timer1_Systemtick();
+	#if 1
+	if(!beeper_start)
+		beeper_start = get_Timer1_Systemtick();
+	else
+		return;
 	beeperFlag |= BEEP_ONCE;
+	#else
+	beeper_signal_effective();
+	Timer1_Delay2Dot54ms_Unblocked(get_Timer1_Systemtick(), 200);
+	beeper_signal_ineffective();
+	#endif
 }
 
 void beeper_2hz(void)

@@ -7,12 +7,12 @@
 /* if define TIMER0_FSYS, timer = (0xFFFF-0x1000)/24MHz = 2.54ms */
 #define TH1_INIT        0x10
 #define TL1_INIT        0x00
-#define MAX_TRIGGER     100
+#define MAX_TRIGGER     80
 
 static unsigned int g_u32SystemTick = 0;
 struct rfCode {
-	unsigned int level;
-  unsigned int duration;
+	unsigned short level;
+  unsigned short duration;
 };
 unsigned int tButton = 0;
 static xdata struct rfCode g_codes[MAX_TRIGGER] = {0};

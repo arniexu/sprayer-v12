@@ -27,4 +27,8 @@ void beeper_signal_ineffective();
 void relay_effective();
 void relay_ineffective();
 
+unsigned char external_start_valid_blocked();
+unsigned char external_stop_valid_blocked();
+unsigned char external_collaborate_valid_blocked();
+
 #endif
