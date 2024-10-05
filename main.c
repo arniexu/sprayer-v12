@@ -14,6 +14,7 @@
 /*  File Function: MS51 DEMO project                                                                        */
 /************************************************************************************************************/
 #include <RTX51TNY.h>
+#include "Application/nv.h"
 #include "button.h"
 #include "systick.h"
 #include "business.h"
@@ -41,15 +42,19 @@ uart 0 is used for printf
 #define STOP_REASON_WATER_SHORT 2
 
 extern unsigned int tButton;
+extern unsigned int button;
+
+extern unsigned int spraying;
 
 void business_logic() _task_ 2
 {
 	unsigned char previous = 0;
+	sprayerNvType nv = {0};
 	gpio_button_init_poll();
 	input_signal_init();
-	left_business_logic();
-	right_business_logic();
-	writeFlash();
+	readFlash(&nv);
+	left_button_logic(&nv);
+	right_button_logic(&nv);
 	while(1)
 	{
 		button = gpio_button_poll_blocked(previous);	
@@ -57,17 +62,17 @@ void business_logic() _task_ 2
 		{
 			if (previous != button)  // button is not pressed consecutively
 				beeper_once();
-			left_business_logic();
-			right_business_logic();
+			left_button_logic(&nv);
+			right_button_logic(&nv);
 			previous = button;
 			button = 0;
-			left_business_logic();
-			right_business_logic();
-			writeFlash();
-			if (right_mode == LEARN_MODE
-				&& left_mode == LEARN_MODE)
+			left_button_logic(&nv);
+			right_button_logic(&nv);
+			writeFlash(nv);
+			if (nv.right_mode == LEARN_MODE
+				&& nv.left_mode == LEARN_MODE)
 			{
-				learn_code();
+				learn_code(nv);
 			}
 		}
 		previous = button;
@@ -81,17 +86,14 @@ void business_logic() _task_ 2
 int startup_task (void) _task_ 0
 {
 	unsigned int start = 0, end = 0;
+	unsigned int flag_collaborate = 0;
+	sprayerNvType nv = {0};
 	MODIFY_HIRC(HIRC_24);
 	P10_QUASI_MODE;
 	enable_Timer2_IC2();
 	start_Timer1_Systemtick();
 	input_signal_init();
-	start_counter = readStartCounter()%100;
-	stop_counter = readStopCounter()%100;
-	start_multiplier = readStartMultiplier();
-	stop_multiplier = readStopMultiplier();
-	level_water_short = readWaterShortLevel();
-	delay_water_short = readWaterShortDelay();
+	readFlash(&nv);
 	beeper = 0;
 	os_create_task(1);
 	os_create_task(2);
@@ -105,10 +107,10 @@ int startup_task (void) _task_ 0
 		{
 			enable_Timer2_IC2();
 		}
-		if (right_mode == RIGHT_TIME_EFFECTIVE_MODE
-			&& left_mode == LEFT_TIME_EFFECTIVE_MODE)
+		if (nv.right_mode == RIGHT_TIME_EFFECTIVE_MODE
+			&& nv.left_mode == LEFT_TIME_EFFECTIVE_MODE)
 		{
-			if (level_water_short != external_water_short_blocked())
+			if (nv.level_water_short != external_water_short_blocked(nv))
 			{	// ²»È±Ë®
 				beeper_2hz_stop();
 				spraying = SPRAY_IDLE;
@@ -118,13 +120,13 @@ int startup_task (void) _task_ 0
 				{
 					beeper_once();
 					tButton = 0;
-					while(water_is_not_short() && start_spray() && stop_spray())
+					while(water_is_not_short(nv) && start_spray(nv) && stop_spray(nv))
 					{
 						Timer1_Delay2Dot54ms_Unblocked(get_Timer1_Systemtick(), 1);
-						start_counter = readStartCounter();
-						stop_counter = readStopCounter();
-						stop_multiplier = readStopMultiplier();
-						start_multiplier = readStartMultiplier();
+						nv.start_counter = readStartCounter();
+						nv.stop_counter = readStopCounter();
+						nv.stop_multiplier = readStopMultiplier();
+						nv.start_multiplier = readStartMultiplier();
 					}
 					spraying = SPRAY_IDLE;
 				}
@@ -133,13 +135,13 @@ int startup_task (void) _task_ 0
 				{
 					beeper_once();
 					flag_collaborate = 1;
-					while(collaborate_ex_button == 0 && water_is_not_short() && start_spray() && stop_spray())
+					while(collaborate_ex_button == 0 && water_is_not_short(nv) && start_spray(nv) && stop_spray(nv))
 					{
 						Timer1_Delay2Dot54ms_Unblocked(get_Timer1_Systemtick(), 1);
-						start_counter = readStartCounter();
-						stop_counter = readStopCounter();
-						stop_multiplier = readStopMultiplier();
-						start_multiplier = readStartMultiplier();
+						nv.start_counter = readStartCounter();
+						nv.stop_counter = readStopCounter();
+						nv.stop_multiplier = readStopMultiplier();
+						nv.start_multiplier = readStartMultiplier();
 					}
 					flag_collaborate = 0;
 					spraying = SPRAY_IDLE;

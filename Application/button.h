@@ -2,6 +2,7 @@
 #define BUTTON_H
 
 #include  "MS51_16K.h"
+#include  "nv.h"
 
 // TM1650 button detection  
 #define LEFT_UP_BUTTON 0x44
@@ -63,5 +64,7 @@ void gpio_button_init_poll (void);
 unsigned char gpio_button_poll_blocked(unsigned char prev);
 unsigned char gpio_button_poll_unblocked(void);
 unsigned char gpio_button_id(unsigned char cod);
+void left_button_logic(sprayerNvType *nv);
+void right_button_logic(sprayerNvType *nv);
 
 #endif

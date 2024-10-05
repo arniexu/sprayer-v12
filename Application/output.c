@@ -1,7 +1,9 @@
 #include "output.h"
 #include "systick.h"
+#include "nv.h"
 
-extern unsigned int level_water_short;
+static unsigned char beeperFlag = BEEP_OFF;
+static unsigned int beeper_start = 0;
 
 void input_signal_init()
 {
@@ -93,16 +95,16 @@ unsigned char external_collaborate_valid_blocked()
 	return FALSE;
 }
 
-unsigned char external_water_short_blocked()
+unsigned char external_water_short_blocked(sprayerNvType nv)
 {
 	unsigned int i = 0;
-	if (water_short_ex_button == level_water_short)
+	if (water_short_ex_button == nv.level_water_short)
 	{
 		for (i = 0; i<100; i++);
-		if (water_short_ex_button == level_water_short)
-			return level_water_short;
+		if (water_short_ex_button == nv.level_water_short)
+			return nv.level_water_short;
 	}
-	return !level_water_short;
+	return !nv.level_water_short;
 }
 
 
@@ -130,4 +132,47 @@ void beeper_2hz(void)
 void beeper_2hz_stop()
 {
 	beeperFlag &= ~0x7f;
+}
+
+int beeper_job()
+{
+	if(beeperFlag)
+	{
+		unsigned int period = 0;
+		if(beeperFlag & BEEP_ONCE)
+		{
+			if(get_Timer1_Systemtick() - beeper_start < 80)
+				beeper_signal_effective();
+			else
+			{
+				beeper_start = 0;
+				beeperFlag &= ~BEEP_ONCE;
+				beeper_signal_ineffective();
+			}
+			return -1;
+		}
+		if (beeperFlag == BEEP_1HZ)
+		{
+			period = 400;
+		}
+		else if(beeperFlag == BEEP_2HZ)
+			period = 200;
+		else if(beeperFlag == BEEP_4HZ)
+			period = 100;
+		else if(beeperFlag == BEEP_8HZ)
+			period = 50;
+		if (get_Timer1_Systemtick()%period < period/2)
+		{
+			beeper_signal_effective();
+		}
+		else
+		{
+			beeper_signal_ineffective();
+		}
+	}
+	else 
+	{
+		beeper_signal_ineffective();	
+	}
+	return 0;
 }

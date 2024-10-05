@@ -1,7 +1,16 @@
+#include <RTX51TNY.h>
 #include "TM1650.h"
 #include "I2C_GPIO.h"
 #include "timer.h"
-static uint8_t TM1650_CDigits[128] = {
+#include "systick.h"
+#include "output.h"
+#include "nv.h"
+
+static sprayerDisplayType led = {0};
+static struct TM1650TypeDef tm1650;
+static unsigned int spraying = SPRAY_IDLE;
+static unsigned int learning = TRUE;
+static code uint8_t TM1650_CDigits[128] = {
 //0x00  0x01  0x02  0x03  0x04  0x05  0x06  0x07  0x08  0x09  0x0A  0x0B  0x0C  0x0D  0x0E  0x0F
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // 0x00
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // 0x10
@@ -12,7 +21,8 @@ static uint8_t TM1650_CDigits[128] = {
   0x63, 0x5F, 0x7C, 0x58, 0x5E, 0x7B, 0x71, 0x6F, 0x74, 0x02, 0x1E, 0x00, 0x06, 0x00, 0x54, 0x5C, // 0x60
   0x73, 0x67, 0x50, 0x6D, 0x78, 0x1C, 0x00, 0x00, 0x00, 0x6E, 0x00, 0x39, 0x30, 0x0F, 0x00, 0x00  // 0x70
 };
-static unsigned char buttonCodes[] = {
+
+static code unsigned char buttonCodes[] = {
 	0x44, 0x45, 0x46, 0x47,
 	0x4c, 0x4d, 0x4e, 0x4f,
 	0x54, 0x55, 0x56, 0x57,
@@ -22,13 +32,6 @@ static unsigned char buttonCodes[] = {
 	0x74, 0x75, 0x76, 0x77,
 	0xa4};
 
-
-static struct TM1650TypeDef tm1650;
-static unsigned char displayBuffer[4] ={0};
-static unsigned char blinkFlag[4] = {FALSE, FALSE, FALSE, FALSE};
-static unsigned char dotBlinkFlag[4] = {FALSE, FALSE, FALSE, FALSE};
-static unsigned char dotFlag[4] = {FALSE, FALSE, FALSE, FALSE};
-
 /** Turns the display on
  */
 void tm1650_displayOn(struct TM1650TypeDef *tm) {
@@ -36,6 +39,7 @@ void tm1650_displayOn(struct TM1650TypeDef *tm) {
 	I2C_Write_Byte(TM1650_DCTRL_BASE, 1);
 }
 
+#if 0
 /** Turns the display off
  */
 void tm1650_displayOff(struct TM1650TypeDef *tm) {
@@ -55,7 +59,7 @@ void tm1650_displayString(struct TM1650TypeDef *tm, char *aString) {
 	tm = NULL;
 	return;
 }
-
+#endif
 /** Display character on the display
  * aPos = the position of the display character
  * aData = character to be displayed
@@ -71,6 +75,30 @@ void tm1650_displayChar(struct TM1650TypeDef *tm, uint8_t aPos,  uint8_t c)
 	//HAL_I2C_Transmit(&hi2c1, TM1650_DISPLAY_BASE + aPos*2, TM1650_CDigits, 1 , HAL_MAX_DELAY);
 }
 
+void tm1650_displayChar_withDot(struct TM1650TypeDef *tm, uint8_t aPos,  uint8_t c)
+{
+	tm = NULL;
+	tm->iBuffer[aPos] = c;
+	I2C_Write_Byte(TM1650_DISPLAY_BASE + aPos*2, TM1650_CDigits[c]+0x80);
+	//HAL_I2C_Transmit(&hi2c1, TM1650_DISPLAY_BASE + aPos*2, TM1650_CDigits, 1 , HAL_MAX_DELAY);
+}
+
+void tm1650_displayChar_withDot_underMask(struct TM1650TypeDef *tm, uint8_t aPos,  uint8_t c, uint8_t mask)
+{
+	tm = NULL;
+	tm->iBuffer[aPos] = c;
+	I2C_Write_Byte(TM1650_DISPLAY_BASE + aPos*2, (TM1650_CDigits[c]+0x80) & mask);
+	//HAL_I2C_Transmit(&hi2c1, TM1650_DISPLAY_BASE + aPos*2, TM1650_CDigits, 1 , HAL_MAX_DELAY);
+}
+
+void tm1650_displaySegment(struct TM1650TypeDef *tm, uint8_t aPos, uint8_t c, uint8_t seg)
+{
+	tm = NULL;
+	tm->iBuffer[aPos] = c;
+	I2C_Write_Byte(TM1650_DISPLAY_BASE + aPos*2, (TM1650_CDigits[c]+0x80) & (0x01 << seg));
+}
+
+#if 0
 /** Getting the buttons pressed
  *
  * returns: the code of the pressed buttons, for details refer to the documentation on the chip TM1650
@@ -79,6 +107,7 @@ uint8_t tm1650_getButtons(struct TM1650TypeDef *tm) {
 	tm = NULL;
 	return I2C_Read_Byte(TM1650_DCTRL_BASE+1);
 }
+#endif
 
 unsigned char isButtonCodeValid(UINT8 c)
 {
@@ -89,63 +118,65 @@ unsigned char isButtonCodeValid(UINT8 c)
 	return 0;
 }
 
-void display_when_learning()
+void display_when_learning(sprayerNvType sprayer)
 {
-	if(right_mode == LEARN_MODE && left_mode == LEARN_MODE)
+	if (sprayer.right_mode == LEARN_MODE 
+		&& sprayer.left_mode == LEARN_MODE)
 	{
-		displayBuffer[0] = '-';
-		displayBuffer[1] = '-';
-		displayBuffer[2] = '-';
-		displayBuffer[3] = '-';
-		blinkFlag[0] = blinkFlag[2] = blinkFlag[3] = SOLID_ON;
-		blinkFlag[1] = SLOW_BLINK;
-		dotFlag[0] = dotFlag[2] = dotFlag[1] = FALSE;
-		dotFlag[3] = TRUE;
+		learning = TRUE;
+		led.displayBuffer[0] = '-';
+		led.displayBuffer[1] = '-';
+		led.displayBuffer[2] = '-';
+		led.displayBuffer[3] = '-';
+		led.blinkFlag[0] = led.blinkFlag[2] = led.blinkFlag[3] = SOLID_ON;
+		led.blinkFlag[1] = SLOW_BLINK;
+		led.dotFlag[0] = led.dotFlag[2] = led.dotFlag[1] = FALSE;
+		led.dotFlag[3] = TRUE;
 	}
-	//os_set_ready(1);
-	//os_switch_task();
 }
 
-void display_when_water_is_back()
+void display_when_water_is_back(sprayerNvType nv)
 {
-	displayBuffer[0] = 'F';
-	displayBuffer[1] = 'C';
-	displayBuffer[2] = '0'+ delay_water_short/10;
-	displayBuffer[3] = '0'+ delay_water_short%10;
-	blinkFlag[0] = blinkFlag[1] = blinkFlag[2] = blinkFlag[3] = SOLID_ON;
-	dotFlag[0] = dotFlag[1] = dotFlag[2] = dotFlag[3] = FALSE;
+	spraying = SPRAY_DELAYING;
+	led.displayBuffer[0] = 'F';
+	led.displayBuffer[1] = 'C';
+	led.displayBuffer[2] = '0'+ nv.delay_water_short/10;
+	led.displayBuffer[3] = '0'+ nv.delay_water_short%10;
+	led.blinkFlag[0] = led.blinkFlag[1] = led.blinkFlag[2] = led.blinkFlag[3] = SOLID_ON;
+	led.dotFlag[0] = led.dotFlag[1] = led.dotFlag[2] = led.dotFlag[3] = FALSE;
 }
 
 
-void display_when_water_is_short()
+void display_when_water_is_short(void)
 {
 	// circular waiting
-	displayBuffer[0] = '0';
-	displayBuffer[1] = '0';
-	displayBuffer[2] = '0';
-	displayBuffer[3] = '0';
-	blinkFlag[0] = blinkFlag[1] = blinkFlag[2] = blinkFlag[3] = WAIT_WATER;
-	dotFlag[0] = dotFlag[2] = FALSE;
-	dotFlag[1] = dotFlag[3] = TRUE;
-}
-void display_when_learn_complete()
-{
-	if (right_mode == LEARN_MODE && left_mode == LEARN_MODE) {
-		displayBuffer[0] = '-';
-		displayBuffer[1] = '-';
-		displayBuffer[2] = '-';
-		displayBuffer[3] = '-';
-		blinkFlag[0] = blinkFlag[1] = blinkFlag[2] = blinkFlag[3] = FAST_BLINK;
-		dotFlag[0] = dotFlag[1] = dotFlag[2] = FALSE;
-		dotFlag[3] = FALSE;
-	}
-	//os_set_ready(1);
-	//os_switch_task();
+	spraying = SPRAY_WAITING;
+	led.displayBuffer[0] = '0';
+	led.displayBuffer[1] = '0';
+	led.displayBuffer[2] = '0';
+	led.displayBuffer[3] = '0';
+	led.blinkFlag[0] = led.blinkFlag[1] = led.blinkFlag[2] = led.blinkFlag[3] = WAIT_WATER;
+	led.dotFlag[0] = led.dotFlag[2] = FALSE;
+	led.dotFlag[1] = led.dotFlag[3] = TRUE;
 }
 
-void refresh_left_display()
+void display_when_learn_complete(sprayerNvType sprayer)
 {
-	switch(left_mode)
+	if (sprayer.right_mode == LEARN_MODE && sprayer.left_mode == LEARN_MODE) {
+		learning = FALSE;
+		led.displayBuffer[0] = '-';
+		led.displayBuffer[1] = '-';
+		led.displayBuffer[2] = '-';
+		led.displayBuffer[3] = '-';
+		led.blinkFlag[0] = led.blinkFlag[1] = led.blinkFlag[2] = led.blinkFlag[3] = FAST_BLINK;
+		led.dotFlag[0] = led.dotFlag[1] = led.dotFlag[2] = FALSE;
+		led.dotFlag[3] = FALSE;
+	}
+}
+
+void refresh_left_display(sprayerNvType sprayer)
+{
+	switch(sprayer.left_mode)
 	{
 		case LEFT_FUNCTION_1_MODE:
 		case LEFT_FUNCTION_2_MODE:
@@ -153,59 +184,59 @@ void refresh_left_display()
 		case LEFT_FUNCTION_4_MODE:
 		case LEFT_FUNCTION_5_MODE:
 		case LEFT_FUNCTION_6_MODE:
-			displayBuffer[0] = 'F';
-			if (left_mode == LEFT_FUNCTION_1_MODE)
+			led.displayBuffer[0] = 'F';
+			if (sprayer.left_mode == LEFT_FUNCTION_1_MODE)
 			{
-				displayBuffer[1] = '1';
+				led.displayBuffer[1] = '1';
 			}
-			else if (left_mode == LEFT_FUNCTION_2_MODE)
+			else if (sprayer.left_mode == LEFT_FUNCTION_2_MODE)
 			{
-				displayBuffer[1] = '2';
+				led.displayBuffer[1] = '2';
 			}
-			else if (left_mode == LEFT_FUNCTION_3_MODE)
+			else if (sprayer.left_mode == LEFT_FUNCTION_3_MODE)
 			{
-				displayBuffer[1] = '3';
+				led.displayBuffer[1] = '3';
 			}
-			else if (left_mode == LEFT_FUNCTION_4_MODE)
+			else if (sprayer.left_mode == LEFT_FUNCTION_4_MODE)
 			{
-				displayBuffer[1] = '4';
+				led.displayBuffer[1] = '4';
 			}
-			else if (left_mode == LEFT_FUNCTION_5_MODE)
+			else if (sprayer.left_mode == LEFT_FUNCTION_5_MODE)
 			{
-				displayBuffer[1] = '5';
+				led.displayBuffer[1] = '5';
 			}
-			else if (left_mode == LEFT_FUNCTION_6_MODE)
+			else if (sprayer.left_mode == LEFT_FUNCTION_6_MODE)
 			{
-				displayBuffer[1] = '6';
+				led.displayBuffer[1] = '6';
 			}
-			blinkFlag[0] = FALSE;
-			blinkFlag[1] = TRUE;
+			led.blinkFlag[0] = FALSE;
+			led.blinkFlag[1] = TRUE;
 			break;
 		case LEARN_MODE:
 			if (learning)
 			{
-				display_when_learning();
+				display_when_learning(sprayer);
 			}
 			else
 			{
-				display_when_learn_complete();
+				display_when_learn_complete(sprayer);
 			}
 			break;
 		case LEFT_TIME_EFFECTIVE_MODE:
 			if (spraying == SPRAY_IDLE || spraying == SPRAY_STARTING)
 			{
-				blinkFlag[0] = blinkFlag[1] = FALSE;
-				displayBuffer[1] = '0'+start_counter%10;
-				displayBuffer[0] = '0'+(start_counter/10)%10;
-				if(start_multiplier == 40
-					|| start_multiplier == 40*10*6
-					|| start_multiplier == 40*10*6*10*6)
+				led.blinkFlag[0] = led.blinkFlag[1] = FALSE;
+				led.displayBuffer[1] = '0'+sprayer.start_counter%10;
+				led.displayBuffer[0] = '0'+(sprayer.start_counter/10)%10;
+				if(sprayer.start_multiplier == 40
+					|| sprayer.start_multiplier == 40*10*6
+					|| sprayer.start_multiplier == 40*10*6*10*6)
 				{
-					dotFlag[0] = TRUE;
-					dotFlag[1] = FALSE;
+					led.dotFlag[0] = TRUE;
+					led.dotFlag[1] = FALSE;
 				}
 				else
-					dotFlag[0] = dotFlag[1] = FALSE;
+					led.dotFlag[0] = led.dotFlag[1] = FALSE;
 			}
 			else if(spraying == SPRAY_WAITING)
 			{
@@ -213,38 +244,38 @@ void refresh_left_display()
 			}
 			else if(spraying == SPRAY_DELAYING)
 			{
-				display_when_water_is_back();
+				display_when_water_is_back(sprayer);
 			}
 			else
 			{
-				displayBuffer[1] = 0;
-				displayBuffer[0] = 0;
-				dotFlag[0] = dotFlag[1] = FALSE;
-				blinkFlag[0] = blinkFlag[1] = FALSE;
+				led.displayBuffer[1] = 0;
+				led.displayBuffer[0] = 0;
+				led.dotFlag[0] = led.dotFlag[1] = FALSE;
+				led.blinkFlag[0] = led.blinkFlag[1] = FALSE;
 			}
 			break;
 		case LEFT_FUNCTION_7_MODE:
-			dotFlag[0] = dotFlag[1] = FALSE;
-			displayBuffer[0] = 'F';
-			displayBuffer[1] = '7';
-			blinkFlag[0] = FALSE;
-			blinkFlag[1] = TRUE;
+			led.dotFlag[0] = led.dotFlag[1] = FALSE;
+			led.displayBuffer[0] = 'F';
+			led.displayBuffer[1] = '7';
+			led.blinkFlag[0] = FALSE;
+			led.blinkFlag[1] = TRUE;
 			break;
 		case LEFT_FUNCTION_8_MODE:
-			dotFlag[0] = dotFlag[1] = FALSE;
-			displayBuffer[0] = 'F';
-			displayBuffer[1] = '8';
-			blinkFlag[0] = FALSE;
-			blinkFlag[1] = TRUE;
+			led.dotFlag[0] = led.dotFlag[1] = FALSE;
+			led.displayBuffer[0] = 'F';
+			led.displayBuffer[1] = '8';
+			led.blinkFlag[0] = FALSE;
+			led.blinkFlag[1] = TRUE;
 			break;
 		default:
 			break;
 	}
 }
 
-void refresh_right_display()
+void refresh_right_display(sprayerNvType sprayer)
 {
-	switch(right_mode)
+	switch(sprayer.right_mode)
 	{
 		case RIGHT_FUNCTION_1_MODE:
 		case RIGHT_FUNCTION_2_MODE:
@@ -252,59 +283,59 @@ void refresh_right_display()
 		case RIGHT_FUNCTION_4_MODE:
 		case RIGHT_FUNCTION_5_MODE:
 		case RIGHT_FUNCTION_6_MODE:
-			displayBuffer[2] = 'F';
-			if (right_mode == RIGHT_FUNCTION_1_MODE)
+			led.displayBuffer[2] = 'F';
+			if (sprayer.right_mode == RIGHT_FUNCTION_1_MODE)
 			{
-				displayBuffer[3] = '1';
+				led.displayBuffer[3] = '1';
 			}
-			else if (right_mode == RIGHT_FUNCTION_2_MODE)
+			else if (sprayer.right_mode == RIGHT_FUNCTION_2_MODE)
 			{
-				displayBuffer[3] = '2';
+				led.displayBuffer[3] = '2';
 			}
-			else if (right_mode == RIGHT_FUNCTION_3_MODE)
+			else if (sprayer.right_mode == RIGHT_FUNCTION_3_MODE)
 			{
-				displayBuffer[3] = '3';
+				led.displayBuffer[3] = '3';
 			}
-			else if (right_mode == RIGHT_FUNCTION_4_MODE)
+			else if (sprayer.right_mode == RIGHT_FUNCTION_4_MODE)
 			{
-				displayBuffer[3] = '4';
+				led.displayBuffer[3] = '4';
 			}
-			else if (right_mode == RIGHT_FUNCTION_5_MODE)
+			else if (sprayer.right_mode == RIGHT_FUNCTION_5_MODE)
 			{
-				displayBuffer[3] = '5';
+				led.displayBuffer[3] = '5';
 			}
-			else if (right_mode == RIGHT_FUNCTION_6_MODE)
+			else if (sprayer.right_mode == RIGHT_FUNCTION_6_MODE)
 			{
-				displayBuffer[3] = '6';
+				led.displayBuffer[3] = '6';
 			}
-			blinkFlag[2] = FALSE;
-			blinkFlag[3] = TRUE;
+			led.blinkFlag[2] = FALSE;
+			led.blinkFlag[3] = TRUE;
 			break;
 		case LEARN_MODE:
 			if (learning)
 			{
-				display_when_learning();
+				display_when_learning(sprayer);
 			}
 			else
 			{
-				display_when_learn_complete();
+				display_when_learn_complete(sprayer);
 			}
 			break;
 		case RIGHT_TIME_EFFECTIVE_MODE:
 			if (spraying == SPRAY_IDLE || spraying == SPRAY_STOPPING)
 			{
-				displayBuffer[3] = '0'+stop_counter%10;
-				displayBuffer[2] = '0'+(stop_counter/10)%10;
-				blinkFlag[2] = blinkFlag[3] = FALSE;
-				if(stop_multiplier == 40
-					|| stop_multiplier == 40*10*6
-					|| stop_multiplier == 40*10*6*10*6)
+				led.displayBuffer[3] = '0'+sprayer.stop_counter%10;
+				led.displayBuffer[2] = '0'+(sprayer.stop_counter/10)%10;
+				led.blinkFlag[2] = led.blinkFlag[3] = FALSE;
+				if(sprayer.stop_multiplier == 40
+					|| sprayer.stop_multiplier == 40*10*6
+					|| sprayer.stop_multiplier == 40*10*6*10*6)
 				{
-					dotFlag[2] = TRUE;
-					dotFlag[3] = FALSE;
+					led.dotFlag[2] = TRUE;
+					led.dotFlag[3] = FALSE;
 				}
 				else
-					dotFlag[2] = dotFlag[3] = FALSE;
+					led.dotFlag[2] = led.dotFlag[3] = FALSE;
 			}
 			else if(spraying == SPRAY_WAITING)
 			{
@@ -312,30 +343,30 @@ void refresh_right_display()
 			}
 			else if(spraying == SPRAY_DELAYING)
 			{
-				display_when_water_is_back();
+				display_when_water_is_back(sprayer);
 			}
 			else
 			{
-				displayBuffer[3] = 0;
-				displayBuffer[2] = 0;
-				dotFlag[2] = dotFlag[3] = FALSE;
-				blinkFlag[2] = blinkFlag[3] = FALSE;
+				led.displayBuffer[3] = 0;
+				led.displayBuffer[2] = 0;
+				led.dotFlag[2] = led.dotFlag[3] = FALSE;
+				led.blinkFlag[2] = led.blinkFlag[3] = FALSE;
 			}
 			break;
 		case RIGHT_FUNCTION_7_MODE:
-			dotFlag[2] = FALSE;
-			dotFlag[3] = TRUE;
-			blinkFlag[2] = FALSE;
-			blinkFlag[3] = TRUE;
-			displayBuffer[2] = 0;
-			displayBuffer[3] = '0' + level_water_short%2;
+			led.dotFlag[2] = FALSE;
+			led.dotFlag[3] = TRUE;
+			led.blinkFlag[2] = FALSE;
+			led.blinkFlag[3] = TRUE;
+			led.displayBuffer[2] = 0;
+			led.displayBuffer[3] = '0' + sprayer.level_water_short%2;
 			break;
 		case RIGHT_FUNCTION_8_MODE:
-			dotFlag[2] = FALSE;
-			dotFlag[3] = FALSE;
-			displayBuffer[2] = '0'+ (delay_water_short/10)%10;
-			displayBuffer[3] = '0' + delay_water_short%10;
-			blinkFlag[2] = blinkFlag[3] = TRUE;
+			led.dotFlag[2] = FALSE;
+			led.dotFlag[3] = FALSE;
+			led.displayBuffer[2] = '0'+ (sprayer.delay_water_short/10)%10;
+			led.displayBuffer[3] = '0' + sprayer.delay_water_short%10;
+			led.blinkFlag[2] = led.blinkFlag[3] = TRUE;
 			break;
 		default:
 			break;
@@ -346,20 +377,22 @@ void refresh_right_display()
 void refresh_led (void) _task_ 1
 {
 	unsigned int i = 0;
+	sprayerNvType sprayer;
 	// start a timer as system tick handler, time out every 1ms 
 	// count the number of	
 	IIC_Init();
 	tm1650_displayOn(&tm1650);
+	readFlash(&sprayer);
 	while(1)
 	{
-		refresh_left_display();
-		refresh_right_display();
+		refresh_left_display(sprayer);
+		refresh_right_display(sprayer);
 		for (i=0; i<4; i++)
 		{
-			if(blinkFlag[i])
+			if(led.blinkFlag[i])
 			{
 				unsigned short period = 0;
-				if (blinkFlag[i] == FAST_BLINK)
+				if (led.blinkFlag[i] == FAST_BLINK)
 				{
 					period = 100;
 					if(get_Timer1_Systemtick()%period < period/2)
@@ -368,13 +401,13 @@ void refresh_led (void) _task_ 1
 					}
 					else
 					{
-						if(dotFlag[i])
-							tm1650_displayChar_withDot(&tm1650, i, displayBuffer[i]);
+						if(led.dotFlag[i])
+							tm1650_displayChar_withDot(&tm1650, i, led.displayBuffer[i]);
 						else
-							tm1650_displayChar(&tm1650, i, displayBuffer[i]);
+							tm1650_displayChar(&tm1650, i, led.displayBuffer[i]);
 					}
 				}
-				else if(blinkFlag[i] == SLOW_BLINK)
+				else if(led.blinkFlag[i] == SLOW_BLINK)
 				{
 					period = 400;
 					if(get_Timer1_Systemtick()%period < period/2)
@@ -383,78 +416,44 @@ void refresh_led (void) _task_ 1
 					}
 					else
 					{
-						if(dotFlag[i])
-							tm1650_displayChar_withDot(&tm1650, i, displayBuffer[i]);
+						if(led.dotFlag[i])
+							tm1650_displayChar_withDot(&tm1650, i, led.displayBuffer[i]);
 						else
-							tm1650_displayChar(&tm1650, i, displayBuffer[i]);
+							tm1650_displayChar(&tm1650, i, led.displayBuffer[i]);
 					}
 				}
-				else if(blinkFlag[i] == CIRCULAR_WAITING)
+				else if(led.blinkFlag[i] == CIRCULAR_WAITING)
 				{
 					period = 1200;
 					if(get_Timer1_Systemtick()%1200 < 200 && get_Timer1_Systemtick()%1200 > 0)
-						tm1650_displaySegment(&tm1650, i, displayBuffer[i],1);
+						tm1650_displaySegment(&tm1650, i, led.displayBuffer[i],1);
 					else if(get_Timer1_Systemtick()%1200 < 400 && get_Timer1_Systemtick()%1200 > 200)
-						tm1650_displaySegment(&tm1650, i, displayBuffer[i],0x02);
+						tm1650_displaySegment(&tm1650, i, led.displayBuffer[i],0x02);
 					else if(get_Timer1_Systemtick()%1200 < 600 && get_Timer1_Systemtick()%1200 > 400)
-						tm1650_displaySegment(&tm1650, i, displayBuffer[i],0x03);
+						tm1650_displaySegment(&tm1650, i, led.displayBuffer[i],0x03);
 					else if(get_Timer1_Systemtick()%1200 < 800 && get_Timer1_Systemtick()%1200 > 600)
-						tm1650_displaySegment(&tm1650, i, displayBuffer[i],0x04);
+						tm1650_displaySegment(&tm1650, i, led.displayBuffer[i],0x04);
 					else if(get_Timer1_Systemtick()%1200 < 1000 && get_Timer1_Systemtick()%1200 > 800)
-						tm1650_displaySegment(&tm1650, i, displayBuffer[i],0x5);
+						tm1650_displaySegment(&tm1650, i, led.displayBuffer[i],0x5);
 					else if(get_Timer1_Systemtick()%1200 < 1200 && get_Timer1_Systemtick()%1200 > 1000)
-						tm1650_displaySegment(&tm1650, i, displayBuffer[i],0x06);
+						tm1650_displaySegment(&tm1650, i, led.displayBuffer[i],0x06);
 				}
-				else if(blinkFlag[i] == WAIT_WATER)
+				else if(led.blinkFlag[i] == WAIT_WATER)
 				{
-					tm1650_displayChar_withDot_underMask(&tm1650, i, displayBuffer[i], 0x8c);
+					tm1650_displayChar_withDot_underMask(&tm1650, i, led.displayBuffer[i], 0x8c);
 				}
 			}
 			else
 			{
-				if(dotFlag[i])
-					tm1650_displayChar_withDot(&tm1650, i, displayBuffer[i]);
+				if(led.dotFlag[i])
+					tm1650_displayChar_withDot(&tm1650, i, led.displayBuffer[i]);
 				else
-					tm1650_displayChar(&tm1650, i, displayBuffer[i]);
+					tm1650_displayChar(&tm1650, i, led.displayBuffer[i]);
 			}
-			if(beeperFlag)
-			{
-				unsigned int period = 0;
-				if(beeperFlag & BEEP_ONCE)
-				{
-					if(get_Timer1_Systemtick() - beeper_start < 80)
-						beeper_signal_effective();
-					else
-					{
-						beeper_start = 0;
-						beeperFlag &= ~BEEP_ONCE;
-						beeper_signal_ineffective();
-					}
-					continue;
-				}
-				if (beeperFlag == BEEP_1HZ)
-				{
-					period = 400;
-				}
-				else if(beeperFlag == BEEP_2HZ)
-					period = 200;
-				else if(beeperFlag == BEEP_4HZ)
-					period = 100;
-				else if(beeperFlag == BEEP_8HZ)
-					period = 50;
-				if (get_Timer1_Systemtick()%period < period/2)
-				{
-					beeper_signal_effective();
-				}
-				else
-				{
-					beeper_signal_ineffective();
-				}
-			}
-			else 
-			{
-				beeper_signal_ineffective();	
-			}
+		}
+		if (beeper_job() < 0) // beeper once is not complete yet
+		{
+			continue;
 		}
 		//Timer1_Delay2Dot54ms_blocked(get_Timer1_Systemtick(), 10);
 		os_switch_task();

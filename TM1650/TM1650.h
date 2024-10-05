@@ -28,7 +28,7 @@
 #include "MS51_16K.h"
 #include <stdio.h>
 #include <stdlib.h>
-
+#include "business.h"
 
 #define TM1650_USE_PROGMEM
 #define TM1650_DISPLAY_BASE 0x68 // Address of the left-most digit 
@@ -47,12 +47,7 @@
 #define TM1650_MIN_BRIGHT   0
 #define TM1650_MAX_BRIGHT   7
 
-// some led display states
-#define SOLID_ON 0
-#define SLOW_BLINK 1
-#define FAST_BLINK 2
-#define CIRCULAR_WAITING 3
-#define WAIT_WATER 4
+#define DELAY Timer1_Delay10ms(100)
 
 struct TM1650TypeDef {
 		char* iPosition;
@@ -64,6 +59,21 @@ struct TM1650TypeDef {
 		uint8_t 	iCtrl[TM1650_NUM_DIGITS];
 };
 
+
+// some led display states
+#define SOLID_ON 0
+#define SLOW_BLINK 1
+#define FAST_BLINK 2
+#define CIRCULAR_WAITING 3
+#define WAIT_WATER 4
+
+typedef struct {
+	unsigned char displayBuffer[4];
+	unsigned char blinkFlag[4];
+	unsigned char dotBlinkFlag[4];
+	unsigned char dotFlag[4];
+}sprayerDisplayType;
+
 //		TM1650(struct TM1650TypeDef *tm, unsigned int aNumDigits);
 
 void	tm1650_init(struct TM1650TypeDef *tm, UINT8);
@@ -73,9 +83,9 @@ void	tm1650_displayOff(struct TM1650TypeDef *tm);
 void	tm1650_displayState(struct TM1650TypeDef *tm, char aState);
 void	tm1650_displayString(struct TM1650TypeDef *tm, char *aString);
 void	tm1650_displayChar(struct TM1650TypeDef *tm, uint8_t pos, uint8_t c);
-void	tm1650_displayChar_withDot(struct TM1650TypeDef *tm, uint8_t pos, uint8_t c);
+void tm1650_displayChar_withDot(struct TM1650TypeDef *tm, uint8_t aPos,  uint8_t c);
 void    tm1650_displaySegment(struct TM1650TypeDef *tm, uint8_t aPos,  uint8_t c, unsigned char i);
-void	tm1650_displayChar_withDot_underMask(struct TM1650TypeDef *tm, uint8_t pos, uint8_t c, uint8_t mask);
+void tm1650_displayChar_withDot_underMask(struct TM1650TypeDef *tm, uint8_t aPos,  uint8_t c, uint8_t mask);
 
 int 	tm1650_displayRunning(struct TM1650TypeDef *tm, char *aString);
 int 	tm1650_displayRunningShift(struct TM1650TypeDef *tm);
@@ -92,7 +102,11 @@ UINT8	tm1650_getButtons(struct TM1650TypeDef *tm);
 unsigned char isButtonCodeValid(UINT8 c);
 
 // refresh specific business logic
-void refresh_left_display(void);
-void refresh_right_display(void);
+void display_when_learning(sprayerNvType sprayer);
+void display_when_water_is_back(sprayerNvType sprayer);
+void display_when_water_is_short(void);
+void display_when_learn_complete(sprayerNvType sprayer);
+void refresh_left_display(sprayerNvType sprayer);
+void refresh_right_display(sprayerNvType sprayer);
 
 #endif /* _TM1650_H_ */

@@ -2,6 +2,7 @@
 #define OUTPUT_H
 
 #include "MS51_16K.h"
+#include "nv.h"
 
 #define BEEP_OFF 0
 #define BEEP_1HZ 1
@@ -9,8 +10,6 @@
 #define BEEP_4HZ 3
 #define BEEP_8HZ 4
 #define BEEP_ONCE 0x80
-unsigned char beeperFlag = BEEP_OFF;
-unsigned int beeper_start = 0;
 
 /* header pin   			mcu pin  			mcu 
 // start 							13						p1.2
@@ -38,10 +37,11 @@ void relay_ineffective(void);
 void beeper_once(void);
 void beeper_2hz(void);
 void beeper_2hz_stop(void);
-
+int beeper_job();
 
 unsigned char external_start_valid_blocked(void);
 unsigned char external_stop_valid_blocked(void);
 unsigned char external_collaborate_valid_blocked(void);
+unsigned char external_water_short_blocked(sprayerNvType nv);
 
 #endif

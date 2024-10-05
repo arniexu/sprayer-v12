@@ -1,6 +1,10 @@
 #ifndef _BUSINESS_H_
 #define _BUSINESS_H_
 
+#include "nv.h"
+#include "tm1650.h"
+#include "output.h"
+
 #define LEFT_FUNCTION_1_MODE 1
 #define LEFT_FUNCTION_2_MODE 2
 #define LEFT_FUNCTION_3_MODE 3
@@ -28,10 +32,10 @@
 #define SPRAY_DELAYING 4
 #define SPRAY_IDLE 0
 
-unsigned char start_spray(void);
-unsigned char stop_spray(void);
-void left_business_logic(void);
-void right_business_logic(void);
+unsigned int water_is_not_short(sprayerNvType nv);
+unsigned char start_spray(sprayerNvType nv);
+unsigned char stop_spray(sprayerNvType nv);
+void learn_code(sprayerNvType nv);
 
 
 #endif

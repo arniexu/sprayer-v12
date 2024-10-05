@@ -314,7 +314,7 @@
             <uAregs>0</uAregs>
             <UseInterruptVector>1</UseInterruptVector>
             <Fuzzy>3</Fuzzy>
-            <Optimize>8</Optimize>
+            <Optimize>9</Optimize>
             <WarningLevel>2</WarningLevel>
             <SizeSpeed>0</SizeSpeed>
             <ObjectExtend>1</ObjectExtend>
@@ -422,11 +422,6 @@
               <FilePath>.\Application\output.c</FilePath>
             </File>
             <File>
-              <FileName>tm11650.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\spray\TM1650\tm11650.c</FilePath>
-            </File>
-            <File>
               <FileName>nv.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\Application\nv.c</FilePath>
@@ -437,9 +432,9 @@
               <FilePath>.\business.c</FilePath>
             </File>
             <File>
-              <FileName>business.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>.\business.h</FilePath>
+              <FileName>tm11650.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\TM1650\tm11650.c</FilePath>
             </File>
           </Files>
         </Group>

@@ -1,4 +1,6 @@
 #include "button.h"
+#include "nv.h"
+#include "business.h"
 #include "timer.h"
 #include "systick.h"
 #include <RTX51TNY.h>
@@ -245,3 +247,306 @@ unsigned char wait_button_blocked(void)
 	return 1;
 }
 #endif
+
+// left business logic
+void left_button_logic(sprayerNvType *nv) 
+{
+    switch(nv->left_mode)
+    {
+        case LEFT_FUNCTION_1_MODE:
+            nv->start_multiplier = 40; // 0.1s
+            // wait_button_blocked
+            if (button == LEFT_SET_BUTTON)
+                nv->left_mode = LEFT_TIME_EFFECTIVE_MODE;
+            else if(button == LEFT_UP_BUTTON)
+                nv->left_mode = LEFT_FUNCTION_2_MODE;
+            else if(button == LEFT_DOWN_BUTTON)
+                nv->left_mode = LEFT_FUNCTION_6_MODE;
+            else if (button == LEARN_BUTTON)
+            {
+                nv->left_mode = LEARN_MODE;
+            }
+            else if (button == LEFT_SET_LONG_BUTTON)
+            {
+                nv->left_mode = LEFT_FUNCTION_7_MODE;
+                nv->right_mode = RIGHT_FUNCTION_7_MODE;
+            }
+            break;
+        case LEFT_FUNCTION_2_MODE:
+            nv->start_multiplier = 400; // 1s
+            // wait_button_blocked
+            if (button == LEFT_SET_BUTTON)
+                nv->left_mode = LEFT_TIME_EFFECTIVE_MODE;
+            else if(button == LEFT_UP_BUTTON)
+                nv->left_mode = LEFT_FUNCTION_3_MODE;
+            else if(button == LEFT_DOWN_BUTTON)
+                nv->left_mode = LEFT_FUNCTION_1_MODE;
+            else if (button == LEARN_BUTTON)
+            {
+                nv->left_mode = LEARN_MODE;
+            }
+            else if (button == LEFT_SET_LONG_BUTTON)
+            {
+
+                nv->left_mode = LEFT_FUNCTION_7_MODE;
+                nv->right_mode = RIGHT_FUNCTION_7_MODE;
+            }
+            break;
+        case LEFT_FUNCTION_3_MODE:
+            nv->start_multiplier = 2400; //0.1min
+            // wait_button_blocked
+            if (button == LEFT_SET_BUTTON)
+                nv->left_mode = LEFT_TIME_EFFECTIVE_MODE;
+            else if(button == LEFT_UP_BUTTON)
+                nv->left_mode = LEFT_FUNCTION_4_MODE;
+            else if(button == LEFT_DOWN_BUTTON)
+                nv->left_mode = LEFT_FUNCTION_2_MODE;
+            else if (button == LEARN_BUTTON)
+            {
+                nv->left_mode = LEARN_MODE;
+            }
+            else if (button == LEFT_SET_LONG_BUTTON)
+            {
+                nv->left_mode = LEFT_FUNCTION_7_MODE;
+                nv->right_mode = RIGHT_FUNCTION_7_MODE;
+            }
+            break;
+        case LEFT_FUNCTION_4_MODE:
+            nv->start_multiplier = 24000; //1min
+            // wait_button_blocked
+            if (button == LEFT_SET_BUTTON)
+                nv->left_mode = LEFT_TIME_EFFECTIVE_MODE;
+            else if(button == LEFT_UP_BUTTON)
+                nv->left_mode = LEFT_FUNCTION_5_MODE;
+            else if(button == LEFT_DOWN_BUTTON)
+                nv->left_mode = LEFT_FUNCTION_3_MODE;
+            else if (button == LEARN_BUTTON)
+            {
+                nv->left_mode = LEARN_MODE;
+            }
+            else if (button == LEFT_SET_LONG_BUTTON)
+            {
+                nv->left_mode = LEFT_FUNCTION_7_MODE;
+                nv->right_mode = RIGHT_FUNCTION_7_MODE;
+            }
+            break;
+        case LEFT_FUNCTION_5_MODE:
+            nv->start_multiplier = 144000; //6 min
+            // wait_button_blocked
+            if (button == LEFT_SET_BUTTON)
+                nv->left_mode = LEFT_TIME_EFFECTIVE_MODE;
+            else if(button == LEFT_UP_BUTTON)
+                nv->left_mode = LEFT_FUNCTION_6_MODE;
+            else if(button == LEFT_DOWN_BUTTON)
+                nv->left_mode = LEFT_FUNCTION_4_MODE;
+            else if (button == LEARN_BUTTON)
+            {
+                nv->left_mode = LEARN_MODE;
+            }
+            else if (button == LEFT_SET_LONG_BUTTON)
+            {
+                nv->left_mode = LEFT_FUNCTION_7_MODE;
+                nv->right_mode = RIGHT_FUNCTION_7_MODE;
+            }
+            break;
+        case LEFT_FUNCTION_6_MODE:
+            nv->start_multiplier = 60*60*400; //60 min
+            // wait_button_blocked
+            if (button == LEFT_SET_BUTTON)
+                nv->left_mode = LEFT_TIME_EFFECTIVE_MODE;
+            else if(button == LEFT_UP_BUTTON)
+                nv->left_mode = LEFT_FUNCTION_1_MODE;
+            else if(button == LEFT_DOWN_BUTTON)
+                nv->left_mode = LEFT_FUNCTION_5_MODE;
+            else if (button == LEARN_BUTTON)
+            {
+                nv->left_mode = LEARN_MODE;
+            }
+            else if (button == LEFT_SET_LONG_BUTTON)
+            {
+                nv->left_mode = LEFT_FUNCTION_7_MODE;
+                nv->right_mode = RIGHT_FUNCTION_7_MODE;
+            }
+            break;
+        case LEFT_TIME_EFFECTIVE_MODE:
+            // wait_button_blocked
+            if (button == LEFT_SET_BUTTON)
+                nv->left_mode = readLeftMode();
+            else if(button == LEFT_UP_BUTTON)
+            {
+                if (nv->start_counter == 99)
+                    nv->start_counter = 1;
+                else
+                    nv->start_counter ++;
+
+            }
+            else if(button == LEFT_DOWN_BUTTON)
+            {
+                if (nv->start_counter == 1)
+                    nv->start_counter = 99;
+                else if (nv->start_counter > 1)
+                    nv->start_counter --;
+            }
+            else if (button == LEARN_BUTTON)
+            {
+                nv->left_mode = LEARN_MODE;
+            }
+            else if (button == LEFT_SET_LONG_BUTTON)
+            {
+                nv->left_mode = LEFT_FUNCTION_7_MODE;
+                nv->right_mode = RIGHT_FUNCTION_7_MODE;
+            }
+            break;
+        case LEARN_MODE:
+            break;
+        case LEFT_FUNCTION_7_MODE:
+            if(button == LEFT_SET_BUTTON){
+                nv->right_mode = RIGHT_FUNCTION_8_MODE;
+                nv->left_mode = LEFT_FUNCTION_8_MODE;
+            }
+            break;
+        case LEFT_FUNCTION_8_MODE:
+            if (button == LEFT_SET_BUTTON)
+            {
+                nv->left_mode = LEFT_TIME_EFFECTIVE_MODE;
+                nv->right_mode = RIGHT_TIME_EFFECTIVE_MODE;
+            }
+            break;
+        default:
+            break;
+    }
+	return;
+}
+
+// right business logic
+void right_button_logic(sprayerNvType *nv) 
+{
+    switch(nv->right_mode)
+    {
+        case RIGHT_FUNCTION_1_MODE:
+            nv->stop_multiplier = 40; // 0.1s
+            // wait_button_blocked
+            if (button == RIGHT_SET_BUTTON)
+                nv->right_mode = RIGHT_TIME_EFFECTIVE_MODE;
+            else if(button == RIGHT_UP_BUTTON)
+                nv->right_mode = RIGHT_FUNCTION_2_MODE;
+            else if(button == RIGHT_DOWN_BUTTON)
+                nv->right_mode = RIGHT_FUNCTION_6_MODE;
+            else if (button == LEARN_BUTTON)
+            {
+                nv->right_mode = LEARN_MODE;
+            }
+            break;
+        case RIGHT_FUNCTION_2_MODE:
+            nv->stop_multiplier = 400; // 1s
+            // wait_button_blocked
+            if (button == RIGHT_SET_BUTTON)
+                nv->right_mode = RIGHT_TIME_EFFECTIVE_MODE;
+            else if(button == RIGHT_UP_BUTTON)
+                nv->right_mode = RIGHT_FUNCTION_3_MODE;
+            else if(button == RIGHT_DOWN_BUTTON)
+                nv->right_mode = RIGHT_FUNCTION_1_MODE;
+            else if (button == LEARN_BUTTON)
+            {
+                nv->right_mode = LEARN_MODE;
+            }
+            break;
+        case RIGHT_FUNCTION_3_MODE:
+            nv->stop_multiplier = 2400; //0.1min
+            // wait_button_blocked
+            if (button == RIGHT_SET_BUTTON)
+                nv->right_mode = RIGHT_TIME_EFFECTIVE_MODE;
+            else if(button == RIGHT_UP_BUTTON)
+                nv->right_mode = RIGHT_FUNCTION_4_MODE;
+            else if(button == RIGHT_DOWN_BUTTON)
+                nv->right_mode = RIGHT_FUNCTION_2_MODE;
+            else if (button == LEARN_BUTTON)
+            {
+                nv->right_mode = LEARN_MODE;
+            }
+            break;
+        case RIGHT_FUNCTION_4_MODE:
+            nv->stop_multiplier = 60*400; //1min
+            // wait_button_blocked
+            if (button == RIGHT_SET_BUTTON)
+                nv->right_mode = RIGHT_TIME_EFFECTIVE_MODE;
+            else if(button == RIGHT_UP_BUTTON)
+                nv->right_mode = RIGHT_FUNCTION_5_MODE;
+            else if(button == RIGHT_DOWN_BUTTON)
+                nv->right_mode = RIGHT_FUNCTION_3_MODE;
+            else if (button == LEARN_BUTTON)
+            {
+                nv->right_mode = LEARN_MODE;
+            }
+            break;
+        case RIGHT_FUNCTION_5_MODE:
+            nv->stop_multiplier = 6*60*400; //6 min
+            // wait_button_blocked
+            if (button == RIGHT_SET_BUTTON)
+                nv->right_mode = RIGHT_TIME_EFFECTIVE_MODE;
+            else if(button == RIGHT_UP_BUTTON)
+                nv->right_mode = RIGHT_FUNCTION_6_MODE;
+            else if(button == RIGHT_DOWN_BUTTON)
+                nv->right_mode = RIGHT_FUNCTION_4_MODE;
+            else if (button == LEARN_BUTTON)
+            {
+                nv->right_mode = LEARN_MODE;
+            }
+            break;
+        case RIGHT_FUNCTION_6_MODE:
+            nv->stop_multiplier = 60*60*400; //60 min
+            // wait_button_blocked
+            if (button == RIGHT_SET_BUTTON)
+                nv->right_mode = RIGHT_TIME_EFFECTIVE_MODE;
+            else if(button == RIGHT_UP_BUTTON)
+                nv->right_mode = RIGHT_FUNCTION_1_MODE;
+            else if(button == RIGHT_DOWN_BUTTON)
+                nv->right_mode = RIGHT_FUNCTION_5_MODE;
+            else if (button == LEARN_BUTTON)
+            {
+                nv->right_mode = LEARN_MODE;
+            }
+            break;
+
+        case RIGHT_TIME_EFFECTIVE_MODE:
+            if (button == RIGHT_SET_BUTTON)
+                nv->right_mode = readRightMode();
+            else if(button == RIGHT_UP_BUTTON)
+            {
+                if (nv->stop_counter == 99)
+                    nv->stop_counter = 0;
+                else
+                    nv->stop_counter ++;
+
+            }
+            else if(button == RIGHT_DOWN_BUTTON)
+            {
+                if (nv->stop_counter == 0)
+                    nv->stop_counter = 99;
+                else if(nv->stop_counter > 0)
+                    nv->stop_counter --;
+            }
+            else if (button == LEARN_BUTTON)
+            {
+                nv->right_mode = LEARN_MODE;
+            }
+            break;
+        case LEARN_MODE: 
+            break;
+        case RIGHT_FUNCTION_7_MODE:
+            if(button == RIGHT_UP_BUTTON || button == RIGHT_DOWN_BUTTON)
+                nv->level_water_short = (nv->level_water_short == 0 ? 1 : 0);
+            break;
+        case RIGHT_FUNCTION_8_MODE:
+            if(button == RIGHT_UP_BUTTON)
+                nv->delay_water_short ++;
+            else if(button == RIGHT_DOWN_BUTTON)
+                nv->delay_water_short = nv->delay_water_short > 0 ? nv->delay_water_short - 1 : 0;
+
+            break;
+        default:
+            break;
+    }
+	return;
+}
+
