@@ -1,6 +1,8 @@
 #include "output.h"
 #include "systick.h"
 
+extern unsigned int level_water_short;
+
 void input_signal_init()
 {
 	P12_QUASI_MODE;

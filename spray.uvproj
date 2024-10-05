@@ -426,6 +426,21 @@
               <FileType>1</FileType>
               <FilePath>..\spray\TM1650\tm11650.c</FilePath>
             </File>
+            <File>
+              <FileName>nv.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Application\nv.c</FilePath>
+            </File>
+            <File>
+              <FileName>business.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\business.c</FilePath>
+            </File>
+            <File>
+              <FileName>business.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\business.h</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
