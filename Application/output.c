@@ -56,9 +56,10 @@ unsigned char external_button_poll_blocked(void)
 
 unsigned char external_start_valid_blocked()
 {
+	unsigned int i = 0;
 	if (0 == start_ex_button)
 	{
-		Timer1_Delay2Dot54ms_blocked(get_Timer1_Systemtick(), 1);
+		for (i = 0; i<100; i++);
 		if (0 == start_ex_button)
 			return TRUE;
 	}
@@ -71,7 +72,6 @@ unsigned char external_stop_valid_blocked()
 	if (0 == stop_ex_button)
 	{
 		for(i = 0; i<100; i++);
-		//Timer1_Delay2Dot54ms_blocked(get_Timer1_Systemtick(), 1);
 		if (0 == stop_ex_button)
 			return TRUE;
 	}
@@ -84,10 +84,48 @@ unsigned char external_collaborate_valid_blocked()
 	if (0 == collaborate_ex_button)
 	{
 		for(i = 0; i<100; i++);
-		//Timer1_Delay2Dot54ms_blocked(get_Timer1_Systemtick(), 1);
 		if (0 == collaborate_ex_button) {
 			return TRUE;
 		}
 	}
 	return FALSE;
+}
+
+unsigned char external_water_short_blocked()
+{
+	unsigned int i = 0;
+	if (water_short_ex_button == level_water_short)
+	{
+		for (i = 0; i<100; i++);
+		if (water_short_ex_button == level_water_short)
+			return level_water_short;
+	}
+	return !level_water_short;
+}
+
+
+void beeper_once(void) 
+{
+	#if 1
+	if(!beeper_start)
+		beeper_start = get_Timer1_Systemtick();
+	else
+		return;
+	beeperFlag |= BEEP_ONCE;
+	#else
+	beeper_signal_effective();
+	Timer1_Delay2Dot54ms_Unblocked(get_Timer1_Systemtick(), 200);
+	beeper_signal_ineffective();
+	#endif
+}
+
+void beeper_2hz(void)
+{
+	beeperFlag &= ~0x7f;
+	beeperFlag += BEEP_2HZ;
+}
+
+void beeper_2hz_stop()
+{
+	beeperFlag &= ~0x7f;
 }

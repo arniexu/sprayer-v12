@@ -47,6 +47,13 @@
 #define TM1650_MIN_BRIGHT   0
 #define TM1650_MAX_BRIGHT   7
 
+// some led display states
+#define SOLID_ON 0
+#define SLOW_BLINK 1
+#define FAST_BLINK 2
+#define CIRCULAR_WAITING 3
+#define WAIT_WATER 4
+
 struct TM1650TypeDef {
 		char* iPosition;
 		char	iActive;
@@ -83,5 +90,9 @@ uint8_t	tm1650_getPosition(struct TM1650TypeDef *tm, unsigned int aPos);
 unsigned int	tm1650_getNumPositions(struct TM1650TypeDef *tm);
 UINT8	tm1650_getButtons(struct TM1650TypeDef *tm);
 unsigned char isButtonCodeValid(UINT8 c);
+
+// refresh specific business logic
+void refresh_left_display(void);
+void refresh_right_display(void);
 
 #endif /* _TM1650_H_ */

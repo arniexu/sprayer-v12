@@ -3,7 +3,7 @@
 #include "systick.h"
 #include <RTX51TNY.h>
 
-extern unsigned int button;
+unsigned int button;
 
 #if 0
 void PinInterrupt_ISR (void) interrupt 7

@@ -15,6 +15,14 @@
 #define         START_MULTIPLIER_OFFSET  0x18
 #define         STOP_MULTIPLIER_OFFSET   0x28
 
-void flushFlash();
+unsigned int readStopMultiplier(void);
+unsigned int readStartMultiplier(void);
+unsigned char readStopCounter(void);
+unsigned char readStartCounter(void);
+unsigned char readLeftMode(void);
+unsigned char readRightMode(void);
+unsigned char readWaterShortLevel(void);
+unsigned char readWaterShortDelay(void);
+void writeFlash(void);
 
 #endif

@@ -1,0 +1,46 @@
+{
+    "configurations": [
+        {
+            "name": "Target 1",
+            "includePath": [
+                "c:\\Users\\14875\\Desktop\\喷淋器\\spray - v13\\Device\\Include",
+                "c:\\Users\\14875\\Desktop\\喷淋器\\spray - v13\\StdDriver\\inc",
+                "c:\\Users\\14875\\Desktop\\喷淋器\\spray - v13\\RTX Tiny2\\inc",
+                "c:\\Users\\14875\\Desktop\\喷淋器\\spray - v13\\TM1650",
+                "c:\\Users\\14875\\Desktop\\喷淋器\\spray - v13\\Application",
+                "c:\\Users\\14875\\Desktop\\喷淋器\\spray - v13",
+                "c:\\Users\\14875\\Desktop\\喷淋器\\spray\\RTXTiny2",
+                "c:\\Users\\14875\\Desktop\\喷淋器\\spray\\TM1650",
+                "c:\\Users\\14875\\Desktop\\喷淋器\\spray - v13\\StdDriver\\src",
+                "c:\\Users\\14875\\Desktop\\喷淋器\\spray - v6\\StdDriver\\src"
+            ],
+            "defines": [
+                "FOSC_240000",
+                "__C51__",
+                "__VSCODE_C51__",
+                "reentrant=",
+                "compact=",
+                "small=",
+                "large=",
+                "data=",
+                "idata=",
+                "pdata=",
+                "bdata=",
+                "xdata=",
+                "code=",
+                "bit=char",
+                "sbit=char",
+                "sfr=char",
+                "sfr16=int",
+                "sfr32=int",
+                "interrupt=",
+                "using=",
+                "_at_=",
+                "_priority_=",
+                "_task_="
+            ],
+            "intelliSenseMode": "${default}"
+        }
+    ],
+    "version": 4
+}
