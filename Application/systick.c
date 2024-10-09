@@ -143,7 +143,7 @@ unsigned char decode(void)
 	for(j = 0; j<MAX_TRIGGER; j++)
 	{
 		if (g_codes[j].level == 0
-			&& g_codes[j].duration > 0x3000)
+			&& g_codes[j].duration > 0x2800)
 		{
 			head = j;
 			found ++;
