@@ -163,7 +163,7 @@ unsigned char gpio_button_poll_blocked(unsigned char prev)
                     pressed = 1;
                     return LEFT_SET_BUTTON;
                 }
-                else if(pressed == 2)
+                else if(pressed == 5)
                 {
                     ; // nothing 	
                 }
@@ -181,50 +181,50 @@ unsigned char gpio_button_poll_blocked(unsigned char prev)
         if (right_up_button == 0)
         {
             if(prev == RIGHT_UP_BUTTON)
-                Timer1_Delay2Dot54ms_blocked(get_Timer1_Systemtick(), 2);
+                Timer1_Delay2Dot54ms_blocked(get_Timer1_Systemtick(), 5);
             else
-                Timer1_Delay2Dot54ms_blocked(get_Timer1_Systemtick(), 30);
+                Timer1_Delay2Dot54ms_blocked(get_Timer1_Systemtick(), 50);
             if (right_up_button == 0)
                 return RIGHT_UP_BUTTON;
         }
         else if(right_down_button == 0)
         {
             if(prev == RIGHT_DOWN_BUTTON)
-                Timer1_Delay2Dot54ms_blocked(get_Timer1_Systemtick(), 2);
+                Timer1_Delay2Dot54ms_blocked(get_Timer1_Systemtick(), 5);
             else
             {
-                Timer1_Delay2Dot54ms_blocked(get_Timer1_Systemtick(), 30);
+                Timer1_Delay2Dot54ms_blocked(get_Timer1_Systemtick(), 50);
             }
                 if (right_down_button == 0)
                     return RIGHT_DOWN_BUTTON;
         }
         else if(right_set_button == 0)
         {	
-                Timer1_Delay2Dot54ms_blocked(get_Timer1_Systemtick(), 30);
+                Timer1_Delay2Dot54ms_blocked(get_Timer1_Systemtick(), 50);
                 if (right_set_button == 0)
                     return RIGHT_SET_BUTTON;
         }
         else if(left_up_button == 0)
         {
             if(prev == LEFT_UP_BUTTON)
-                Timer1_Delay2Dot54ms_blocked(get_Timer1_Systemtick(), 2);
+                Timer1_Delay2Dot54ms_blocked(get_Timer1_Systemtick(), 5);
             else
-                Timer1_Delay2Dot54ms_blocked(get_Timer1_Systemtick(), 30);
+                Timer1_Delay2Dot54ms_blocked(get_Timer1_Systemtick(), 50);
             if (left_up_button == 0)
                 return LEFT_UP_BUTTON;
         }
         else if(left_down_button == 0)
         {
             if(prev == LEFT_DOWN_BUTTON)
-                Timer1_Delay2Dot54ms_blocked(get_Timer1_Systemtick(), 2);
+                Timer1_Delay2Dot54ms_blocked(get_Timer1_Systemtick(), 5);
             else
-                Timer1_Delay2Dot54ms_blocked(get_Timer1_Systemtick(), 30);
+                Timer1_Delay2Dot54ms_blocked(get_Timer1_Systemtick(), 50);
                 if (left_down_button == 0)
                     return LEFT_DOWN_BUTTON;
         }
         else if(learn_button == 0)
         {
-                Timer1_Delay2Dot54ms_blocked(get_Timer1_Systemtick(), 30);
+                Timer1_Delay2Dot54ms_blocked(get_Timer1_Systemtick(), 50);
                 if (learn_button == 0)
                     return LEARN_BUTTON;
         }
