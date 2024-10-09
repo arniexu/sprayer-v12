@@ -9,10 +9,11 @@
 #define TL1_INIT        0x00
 #define MAX_TRIGGER     80
 
+
 static unsigned int g_u32SystemTick = 0;
 struct rfCode {
-	unsigned short level;
-  unsigned short duration;
+	unsigned char level;
+  unsigned int duration;
 };
 unsigned int tButton = 0;
 static xdata struct rfCode g_codes[MAX_TRIGGER] = {0};
@@ -80,7 +81,7 @@ void Capture_ISR (void) interrupt 12
 {
     _push_(SFRS);
 	clr_CAPCON0_CAPF2;                  /* clear capture0 interrupt flag  */
-	val = C2L + (C2H << 8) + 0xffff*g_u32Timer2Overflow;
+	val = C2L + (C2H * 0x100) + 0xffff*g_u32Timer2Overflow;
 	g_u32Timer2Overflow = 0;
 	g_codes[i].duration = val; 							/* For capture mode CxL/CxH with data capture from I/O pin*/
 	g_codes[i].level = !P10;	

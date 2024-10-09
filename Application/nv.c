@@ -4,29 +4,57 @@
 #include "iap.h"
 #include "common.h"
 #include "MS51_16K.h"
-
+/*
+MS51 flash 分区映射图
+0000 - 3f00 16KB - 0x100 Flash 用于存储代码
+3f00 - 3fff 256字节 用于存储用户设置
+*/
+/*
+功能描述：从flash上读取4个字节到无符号整型数
+对应地址：0x3f00 + 0x0c
+对应长度：4个字节
+*/
 unsigned int readStopMultiplier()
 {
 	unsigned int val = 0;
-	Read_DATAFLASH_ARRAY(DATA_START_ADDR+ STOP_MULTIPLIER_OFFSET, (unsigned char *)&val, 4);
+	Read_DATAFLASH_ARRAY(DATA_START_ADDR+ STOP_MULTIPLIER_OFFSET, (unsigned char *)&val, sizeof(val));
 	return val;
 }
 
+/*
+功能描述：从flash上读取4个字节到无符号整型数
+对应地址：0x3f00 + 0x10
+对应长度：4个字节
+*/
 unsigned int readStartMultiplier()
 {
 	unsigned int val = 0;
-	Read_DATAFLASH_ARRAY(DATA_START_ADDR+ START_MULTIPLIER_OFFSET, (unsigned char *)&val, 4);
+	Read_DATAFLASH_ARRAY(DATA_START_ADDR+ START_MULTIPLIER_OFFSET, (unsigned char *)&val, sizeof(val));
 	return val;
 }
+/*
+功能描述：从flash上读取4个字节到无符号整型数
+对应地址：0x3f00 + 0x15
+对应长度：1个字节
+*/
 unsigned char readStopCounter(void)
 {
 	return Read_APROM_BYTE(DATA_START_ADDR+ STOP_COUNTER_OFFSET);
 }
-
+/*
+功能描述：从flash上读取4个字节到无符号整型数
+对应地址：0x3f00 + 0x16
+对应长度：1个字节
+*/
 unsigned char readStartCounter(void)
 {
 	return Read_APROM_BYTE(DATA_START_ADDR + START_COUNTER_OFFSET);
 }
+/*
+功能描述：从flash上读取4个字节到无符号整型数
+对应地址：0x3f00 + 0x17
+对应长度：1个字节
+*/
 unsigned char readWaterShortLevel(void)
 {
 	return Read_APROM_BYTE(DATA_START_ADDR+ LEVEL_WATER_SHORT_OFFSET);
@@ -36,7 +64,11 @@ unsigned char readWaterShortDelay(void)
 {
 	return Read_APROM_BYTE(DATA_START_ADDR + DELAY_WATER_SHORT_OFFSET);
 }
-
+/*
+功能描述：将变量从内存同步到flash
+注意点：耗时操作，比访问内存慢的多，慎用
+注意点2：内存中的变量掉电是会丢失的，所以需要写入flash
+*/
 void writeFlash(sprayerNvType nv)
 {
 	unsigned char mode = 0;
@@ -57,7 +89,7 @@ void writeFlash(sprayerNvType nv)
 		mode = LEFT_FUNCTION_1_MODE;
 	}
 	Write_DATAFLASH_BYTE(DATA_START_ADDR + LEFT_MODE_OFFSET, mode);
-	Write_DATAFLASH_ARRAY(DATA_START_ADDR + START_MULTIPLIER_OFFSET, (unsigned char *)&nv.start_multiplier, 4);
+	Write_DATAFLASH_ARRAY(DATA_START_ADDR + START_MULTIPLIER_OFFSET, (unsigned char *)&nv.start_multiplier, sizeof(nv.start_multiplier));
 	if (nv.stop_multiplier == 40)
 		mode = RIGHT_FUNCTION_1_MODE;
 	else if(nv.stop_multiplier == 400)
@@ -75,7 +107,7 @@ void writeFlash(sprayerNvType nv)
 		mode = RIGHT_FUNCTION_1_MODE;
 	}
 	Write_DATAFLASH_BYTE(DATA_START_ADDR + RIGHT_MODE_OFFSET, mode);
-	Write_DATAFLASH_ARRAY(DATA_START_ADDR + STOP_MULTIPLIER_OFFSET, (unsigned char *)&nv.stop_multiplier, 4);
+	Write_DATAFLASH_ARRAY(DATA_START_ADDR + STOP_MULTIPLIER_OFFSET, (unsigned char *)&nv.stop_multiplier, sizeof(nv.stop_multiplier));
 	Write_DATAFLASH_BYTE(DATA_START_ADDR + START_COUNTER_OFFSET, nv.start_counter%100);
 	Write_DATAFLASH_BYTE(DATA_START_ADDR + STOP_COUNTER_OFFSET, nv.stop_counter%100);
 	Write_DATAFLASH_BYTE(DATA_START_ADDR + LEVEL_WATER_SHORT_OFFSET, nv.level_water_short%2);

@@ -32,10 +32,10 @@
 #define SPRAY_DELAYING 4
 #define SPRAY_IDLE 0
 
-unsigned int water_is_not_short(sprayerNvType nv);
-unsigned char start_spray(sprayerNvType nv);
-unsigned char stop_spray(sprayerNvType nv);
-void learn_code(sprayerNvType nv);
+unsigned int water_is_not_short(sprayerNvType *nv, unsigned char *s);
+unsigned char start_spray(sprayerNvType *nv, unsigned char *s);
+unsigned char stop_spray(sprayerNvType *nv, unsigned char *s);
+void learn_code(sprayerNvType *nv, unsigned int *s);
 
 
 #endif

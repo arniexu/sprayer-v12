@@ -194,7 +194,7 @@
             <UseOnchipRom>1</UseOnchipRom>
             <UseOnchipArithmetic>0</UseOnchipArithmetic>
             <UseMultipleDPTR>0</UseMultipleDPTR>
-            <UseOnchipXram>0</UseOnchipXram>
+            <UseOnchipXram>1</UseOnchipXram>
             <HadIRAM>1</HadIRAM>
             <HadXRAM>1</HadXRAM>
             <HadIROM>1</HadIROM>
@@ -258,7 +258,7 @@
               <Ocr1>
                 <Type>0</Type>
                 <StartAddress>0x0</StartAddress>
-                <Size>0x400</Size>
+                <Size>0x2ff</Size>
               </Ocr1>
               <Ocr2>
                 <Type>0</Type>
@@ -310,11 +310,11 @@
           <C51>
             <RegisterColoring>0</RegisterColoring>
             <VariablesInOrder>0</VariablesInOrder>
-            <IntegerPromotion>1</IntegerPromotion>
+            <IntegerPromotion>0</IntegerPromotion>
             <uAregs>0</uAregs>
             <UseInterruptVector>1</UseInterruptVector>
             <Fuzzy>3</Fuzzy>
-            <Optimize>9</Optimize>
+            <Optimize>8</Optimize>
             <WarningLevel>2</WarningLevel>
             <SizeSpeed>0</SizeSpeed>
             <ObjectExtend>1</ObjectExtend>
@@ -357,7 +357,7 @@
             <CSection></CSection>
             <UserSection></UserSection>
             <CodeBaseAddress></CodeBaseAddress>
-            <XDataBaseAddress>0X0000-0X03FF</XDataBaseAddress>
+            <XDataBaseAddress>0X0000-0X02FE</XDataBaseAddress>
             <PDataBaseAddress></PDataBaseAddress>
             <BitBaseAddress></BitBaseAddress>
             <DataBaseAddress></DataBaseAddress>
@@ -395,11 +395,6 @@
               <FileName>main.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\main.c</FilePath>
-            </File>
-            <File>
-              <FileName>hardware.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\hardware.c</FilePath>
             </File>
             <File>
               <FileName>I2C_GPIO.c</FileName>

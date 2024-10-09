@@ -3,11 +3,11 @@
 
 typedef struct {
     unsigned int start_multiplier;
-    unsigned int start_counter;
+    unsigned char start_counter;
     unsigned int stop_multiplier;
-    unsigned int stop_counter;
-    unsigned int level_water_short;
-    unsigned int delay_water_short;
+    unsigned char stop_counter;
+    unsigned char level_water_short;
+    unsigned char delay_water_short;
     unsigned char right_mode;
     unsigned char left_mode;
 }sprayerNvType;

@@ -3,7 +3,7 @@
 #include "hardware.h"
 #include <intrins.h>
 /**
- * @brief       初始化IIC
+ * @brief       初始化I2C管脚成开漏输出
  * @param       无
  * @retval      无
  */
@@ -18,6 +18,9 @@ void IIC_Init(void)
 	#endif
 }
 
+/*
+功能描述：单片机写出一个0或1到i2c的数据线
+*/
 static void IIC_SDA(uint8_t val)
 {
 	if(val)
@@ -25,7 +28,9 @@ static void IIC_SDA(uint8_t val)
 	else
 		TM1650_SDA = 0;
 }
-
+/*
+功能描述：单片机驱动时钟线产生高电平或低电平
+*/
 static void IIC_SCL(uint8_t val)
 {
 	if(val)

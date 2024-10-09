@@ -15,26 +15,7 @@ void input_signal_init()
 	P07_PUSHPULL_MODE;
 }
 
-void beeper_signal_effective()
-{
-	beeper = 1;
-}
-
-void beeper_signal_ineffective()
-{
-	beeper = 0;
-}
-
-void relay_effective()
-{
-	relay = 1;
-}
-
-void relay_ineffective()
-{
-	relay = 0;
-}
-
+#if 0
 unsigned char external_button_poll_blocked(void)
 {
 		if (start_ex_button == 0)
@@ -57,6 +38,7 @@ unsigned char external_button_poll_blocked(void)
 		}
 		return 0;
 }
+#endif
 
 unsigned char external_start_valid_blocked()
 {
@@ -107,7 +89,12 @@ unsigned char external_water_short_blocked(sprayerNvType nv)
 	return !nv.level_water_short;
 }
 
-
+/*
+功能描述：蜂鸣器叫一声
+实现方式：阻塞时和非阻塞式，当前为非阻塞式实现；阻塞式实现方式可以通过#if 0打开
+注意点： 连续的多次蜂鸣并不会连在一起形成一声长长的嘀，而是嘀嘀嘀一声声分开的
+注意点2：不建议使用阻塞式实现
+*/
 void beeper_once(void) 
 {
 	#if 1
@@ -117,23 +104,35 @@ void beeper_once(void)
 		return;
 	beeperFlag |= BEEP_ONCE;
 	#else
-	beeper_signal_effective();
+	beeper = 1;
 	Timer1_Delay2Dot54ms_Unblocked(get_Timer1_Systemtick(), 200);
-	beeper_signal_ineffective();
+	beeper = 0;
 	#endif
 }
 
+/*
+功能描述：2HZ蜂鸣
+*/
 void beeper_2hz(void)
 {
 	beeperFlag &= ~0x7f;
 	beeperFlag += BEEP_2HZ;
 }
 
+/*
+功能描述：停止2hz蜂鸣
+*/
 void beeper_2hz_stop()
 {
 	beeperFlag &= ~0x7f;
 }
 
+/*
+功能描述：蜂鸣器蜂鸣执行线程
+功能支持：1HZ 2HZ 4HZ 8HZ 蜂鸣和单独的蜂鸣一声
+注意点：此函数需要至少1ms调用一次，可以放在定时器的中断处理函数或者一个独立线程中
+注意点2：此时的系统滴答声是2.54ms
+*/
 int beeper_job()
 {
 	if(beeperFlag)
@@ -142,12 +141,12 @@ int beeper_job()
 		if(beeperFlag & BEEP_ONCE)
 		{
 			if(get_Timer1_Systemtick() - beeper_start < 80)
-				beeper_signal_effective();
+				beeper = 1;
 			else
 			{
 				beeper_start = 0;
 				beeperFlag &= ~BEEP_ONCE;
-				beeper_signal_ineffective();
+				beeper = 0;
 			}
 			return -1;
 		}
@@ -163,16 +162,16 @@ int beeper_job()
 			period = 50;
 		if (get_Timer1_Systemtick()%period < period/2)
 		{
-			beeper_signal_effective();
+			beeper = 1;
 		}
 		else
 		{
-			beeper_signal_ineffective();
+			beeper = 0;
 		}
 	}
 	else 
 	{
-		beeper_signal_ineffective();	
+		beeper = 0;	
 	}
 	return 0;
 }

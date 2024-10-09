@@ -29,11 +29,6 @@ sbit relay = P0^7;
 void input_signal_init(void);
 unsigned char external_button_poll_blocked(void);
 
-void beeper_signal_effective(void);
-void beeper_signal_ineffective(void);
-void relay_effective(void);
-void relay_ineffective(void);
-
 void beeper_once(void);
 void beeper_2hz(void);
 void beeper_2hz_stop(void);

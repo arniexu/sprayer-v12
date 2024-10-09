@@ -64,7 +64,7 @@ void gpio_button_init_poll (void);
 unsigned char gpio_button_poll_blocked(unsigned char prev);
 unsigned char gpio_button_poll_unblocked(void);
 unsigned char gpio_button_id(unsigned char cod);
-void left_button_logic(sprayerNvType *nv);
-void right_button_logic(sprayerNvType *nv);
+void left_button_logic(unsigned int but);
+void right_button_logic(unsigned int but);
 
 #endif
