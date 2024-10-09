@@ -30,8 +30,8 @@ unsigned int water_is_not_short(sprayerNvType *nv, unsigned char *spraying)
 		{
 
 			beeper_once();
-            beeper_2hz_stop();
-            *spraying = SPRAY_IDLE;
+			beeper_2hz_stop();
+			*spraying = SPRAY_IDLE;
 			tButton = (tButton == RF_STOP_BUTTON ? 0 : tButton);
 			return FALSE;
 		}
@@ -42,7 +42,8 @@ unsigned int water_is_not_short(sprayerNvType *nv, unsigned char *spraying)
 		}
 	}
 	beeper_2hz_stop();
-	if(water_present == FALSE  && nv->level_water_short == external_water_short_blocked(*nv)) // water is still short 
+	nv->level_water_short = readWaterShortLevel();
+	if(water_present == FALSE && nv->level_water_short == external_water_short_blocked(*nv)) // water is still short 
 	{
 		relay = 0;
 		*spraying = SPRAY_IDLE;
@@ -54,11 +55,11 @@ unsigned int water_is_not_short(sprayerNvType *nv, unsigned char *spraying)
         nv->delay_water_short = readWaterShortDelay();
         delay_water_short_backup = nv->delay_water_short;
 		*spraying = SPRAY_DELAYING;
+		nv->delay_water_short = readWaterShortDelay();
 		while(0 < nv->delay_water_short)
 		{
 			unsigned int temp = 0;
 			unsigned int prev = 0;
-			nv->delay_water_short = readWaterShortDelay();
 			temp = get_Timer1_Systemtick();
 			while (get_Timer1_Systemtick() - temp < 400) {
 				if(nv->level_water_short == external_water_short_blocked(*nv))
@@ -66,7 +67,8 @@ unsigned int water_is_not_short(sprayerNvType *nv, unsigned char *spraying)
 					return TRUE;
 				}
 				else if (tButton == RF_STOP_BUTTON
-				|| external_stop_valid_blocked())
+				|| external_stop_valid_blocked()
+				|| (flag_collaborate && collaborate_ex_button == 1)) // waiting can be forcibly stopped
 				{
 					beeper_once();
 					tButton = (tButton == RF_STOP_BUTTON ? 0 : tButton);
