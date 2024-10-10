@@ -28,7 +28,7 @@ unsigned char code buttonCodes[] = {
 	0x64, 0x65, 0x66, 0x67,
 	0x6c, 0x6d, 0x6e, 0x6f,
 	0x74, 0x75, 0x76, 0x77,
-	0xa4};
+	0xa4, 0xa5};
 
 	extern unsigned char spraying;
 	extern unsigned int learning;
@@ -116,7 +116,7 @@ uint8_t tm1650_getButtons(struct TM1650TypeDef *tm) {
 unsigned char isButtonCodeValid(UINT8 c)
 {
 	unsigned char i = 0;
-	for (i = 0; i<29; i++)
+	for (i = 0; i<30; i++)
 		if (c == buttonCodes[i])
 			return 1;
 	return 0;

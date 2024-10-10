@@ -13,6 +13,7 @@
 #define RIGHT_SET_BUTTON 0x56
 #define LEARN_BUTTON 0x64
 #define LEFT_SET_LONG_BUTTON 0xa4
+#define LEARN_LONG_BUTTON 0xa5
 
 // from onboard physical button
 #define LEFT_UP_BUTTON_ID 0

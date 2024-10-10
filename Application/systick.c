@@ -1,6 +1,7 @@
 #include "systick.h"
 #include "button.h"
 #include "eeprom.h"
+#include "nv.h"
 #include <RTX51TNY.h>
 
 /* if define TIMER0_FSYS_DIV12, timer = (0xFFFF-0x1000)*12/24MHz = 36.58ms */
@@ -111,6 +112,7 @@ void enable_Timer2_IC2 (void)
 	set_EIE_ET2;												 //Enable Timer2 Interrupt
     set_T2CON_TR2;                       //Triger Timer2
     ENABLE_GLOBAL_INTERRUPT;
+	Read_DATAFLASH_ARRAY(DATA_START_ADDR+ REMOTE_CONTROLLER_ADDRESS_OFFSET, (unsigned char *)g_addresses, 19);
 }
 
 uint32_t get_Timer1_Systemtick(void)
@@ -196,9 +198,19 @@ unsigned char saveToFlash()
 	if (i_decodes == 0x18)
 	{
 		memcpy(g_addresses, g_decodes, 19);
+		Write_DATAFLASH_ARRAY(DATA_START_ADDR + REMOTE_CONTROLLER_ADDRESS_OFFSET, 
+								(unsigned char *)g_addresses, 19);
 		return TRUE;
 	}
 	return FALSE;
+}
+
+unsigned char clearAddress()
+{
+	memset(g_addresses, 0, 19);
+	Write_DATAFLASH_ARRAY(DATA_START_ADDR + REMOTE_CONTROLLER_ADDRESS_OFFSET, 
+							(unsigned char *)g_addresses, 19);
+	return TRUE;
 }
 
 unsigned char match(void)

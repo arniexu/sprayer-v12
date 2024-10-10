@@ -23,6 +23,7 @@ typedef struct {
 #define         DELAY_WATER_SHORT_OFFSET 0x10
 #define         START_MULTIPLIER_OFFSET  0x18
 #define         STOP_MULTIPLIER_OFFSET   0x28
+#define         REMOTE_CONTROLLER_ADDRESS_OFFSET 0x30
 
 unsigned int readStopMultiplier(void);
 unsigned int readStartMultiplier(void);

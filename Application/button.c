@@ -183,7 +183,7 @@ unsigned char gpio_button_poll_blocked(unsigned char prev)
             if(prev == RIGHT_UP_BUTTON)
                 Timer1_Delay2Dot54ms_blocked(get_Timer1_Systemtick(), 5);
             else
-                Timer1_Delay2Dot54ms_blocked(get_Timer1_Systemtick(), 50);
+                Timer1_Delay2Dot54ms_blocked(get_Timer1_Systemtick(), 80);
             if (right_up_button == 0)
                 return RIGHT_UP_BUTTON;
         }
@@ -193,14 +193,14 @@ unsigned char gpio_button_poll_blocked(unsigned char prev)
                 Timer1_Delay2Dot54ms_blocked(get_Timer1_Systemtick(), 5);
             else
             {
-                Timer1_Delay2Dot54ms_blocked(get_Timer1_Systemtick(), 50);
+                Timer1_Delay2Dot54ms_blocked(get_Timer1_Systemtick(), 80);
             }
                 if (right_down_button == 0)
                     return RIGHT_DOWN_BUTTON;
         }
         else if(right_set_button == 0)
         {	
-                Timer1_Delay2Dot54ms_blocked(get_Timer1_Systemtick(), 50);
+                Timer1_Delay2Dot54ms_blocked(get_Timer1_Systemtick(), 80);
                 if (right_set_button == 0)
                     return RIGHT_SET_BUTTON;
         }
@@ -209,7 +209,7 @@ unsigned char gpio_button_poll_blocked(unsigned char prev)
             if(prev == LEFT_UP_BUTTON)
                 Timer1_Delay2Dot54ms_blocked(get_Timer1_Systemtick(), 5);
             else
-                Timer1_Delay2Dot54ms_blocked(get_Timer1_Systemtick(), 50);
+                Timer1_Delay2Dot54ms_blocked(get_Timer1_Systemtick(), 80);
             if (left_up_button == 0)
                 return LEFT_UP_BUTTON;
         }
@@ -218,15 +218,21 @@ unsigned char gpio_button_poll_blocked(unsigned char prev)
             if(prev == LEFT_DOWN_BUTTON)
                 Timer1_Delay2Dot54ms_blocked(get_Timer1_Systemtick(), 5);
             else
-                Timer1_Delay2Dot54ms_blocked(get_Timer1_Systemtick(), 50);
+                Timer1_Delay2Dot54ms_blocked(get_Timer1_Systemtick(), 80);
                 if (left_down_button == 0)
                     return LEFT_DOWN_BUTTON;
         }
         else if(learn_button == 0)
         {
-                Timer1_Delay2Dot54ms_blocked(get_Timer1_Systemtick(), 50);
-                if (learn_button == 0)
-                    return LEARN_BUTTON;
+            unsigned int start = get_Timer1_Systemtick();
+						unsigned int end = 0;
+            while(learn_button == 0)
+                Timer1_Delay2Dot54ms_Unblocked(get_Timer1_Systemtick(), 2);
+            end = get_Timer1_Systemtick();
+            if (end - start > 800)
+                return LEARN_LONG_BUTTON;
+            else if (end - start > 30)
+                return LEARN_BUTTON;
         }
 		return 0;
 }

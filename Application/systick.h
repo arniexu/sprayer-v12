@@ -17,5 +17,6 @@ unsigned char match(void);
 unsigned char oneFrameReceived();
 unsigned char getRfButtonCode();
 unsigned char saveToFlash();
+unsigned char clearAddress();
 
 #endif
