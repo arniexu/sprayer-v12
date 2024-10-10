@@ -1,13 +1,15 @@
 #include "business.h"
+#include "Application/button.h"
 #include "Application/nv.h"
 #include "Application/output.h"
+#include "Application/systick.h"
 #include "tm1650.h"
 #include "nv.h"
 #include "output.h"
 #include "systick.h"
 #include "button.h"
 
-unsigned int flag_collaborate = 0;
+extern unsigned int flag_collaborate;
 
 extern unsigned int tButton;
 
@@ -185,6 +187,17 @@ unsigned char stop_spray(sprayerNvType *nv, unsigned char *spraying)
 	return TRUE;
 }
 
+static unsigned char is_learn_button_long_pressed(void)
+{
+	unsigned int now = get_Timer1_Systemtick();
+	while (learn_button == 0)
+	{
+		Timer1_Delay2Dot54ms_Unblocked(get_Timer1_Systemtick(), 2);
+		if (get_Timer1_Systemtick() - now > 800)
+			return LEARN_LONG_BUTTON;
+	}
+	return 0;
+}
 void learn_code(sprayerNvType *nv, unsigned int* learning)
 {
 	unsigned int now = get_Timer1_Systemtick();
@@ -193,6 +206,12 @@ void learn_code(sprayerNvType *nv, unsigned int* learning)
 		return;
 	while(get_Timer1_Systemtick() - now < 400*8 && tButton == 0)
 	{
+		if (is_learn_button_long_pressed())
+		{
+			beeper_once();
+			clearAddress();
+			break;
+		}
 		*learning = TRUE;
 		Timer1_Delay2Dot54ms_Unblocked(get_Timer1_Systemtick(), 1);
 	}
@@ -200,7 +219,7 @@ void learn_code(sprayerNvType *nv, unsigned int* learning)
 	{
 		*learning = FALSE;
 		beeper_once();
-		//writeAddressToFlash();
+		saveToFlash();
 		now1 = get_Timer1_Systemtick();
 		while(get_Timer1_Systemtick() -	now1 < 400)
 			Timer1_Delay2Dot54ms_Unblocked(get_Timer1_Systemtick(), 1);

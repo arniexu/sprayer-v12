@@ -10,7 +10,7 @@
 #define TL1_INIT        0x00
 #define MAX_TRIGGER     80
 
-
+extern unsigned int learning;
 static unsigned int g_u32SystemTick = 0;
 struct rfCode {
 	unsigned char level;
@@ -184,7 +184,7 @@ unsigned char decode(void)
 	if (i_decodes == 24){
 		tButton = getRfButtonCode();
 		if (tButton == RF_START_BUTTON || tButton == RF_STOP_BUTTON)
-			saveToFlash();
+			/*saveToFlash()*/;
 		else if (match())
 		{
 			tButton = getRfButtonCode();
@@ -215,7 +215,7 @@ unsigned char clearAddress()
 
 unsigned char match(void)
 {
-	if(memcmp(g_addresses, g_decodes, 19) == 0)
+	if(memcmp(g_addresses, g_decodes, 18) == 0)
 		return TRUE;
 	return FALSE;
 }
@@ -224,7 +224,7 @@ unsigned char getRfButtonCode()
 {
 	unsigned char index = 0;
 	unsigned char val = 0;
-	if (oneFrameReceived())
+	if (oneFrameReceived() && (match() || learning))
 	{
 		for(index = 5; index > 0; index --)
 		{

@@ -224,14 +224,8 @@ unsigned char gpio_button_poll_blocked(unsigned char prev)
         }
         else if(learn_button == 0)
         {
-            unsigned int start = get_Timer1_Systemtick();
-						unsigned int end = 0;
-            while(learn_button == 0)
-                Timer1_Delay2Dot54ms_Unblocked(get_Timer1_Systemtick(), 2);
-            end = get_Timer1_Systemtick();
-            if (end - start > 800)
-                return LEARN_LONG_BUTTON;
-            else if (end - start > 30)
+            Timer1_Delay2Dot54ms_blocked(get_Timer1_Systemtick(), 50);
+            if (learn_button == 0)
                 return LEARN_BUTTON;
         }
 		return 0;

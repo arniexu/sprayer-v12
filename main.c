@@ -40,7 +40,7 @@ uart 0 is used for printf
 */
 
 extern unsigned int tButton;
-
+unsigned int flag_collaborate = 0;
 unsigned char spraying = SPRAY_IDLE;
 unsigned int learning = FALSE;
 sprayerNvType nv = {0};
@@ -88,7 +88,6 @@ void business_logic() _task_ 2
 int startup_task (void) _task_ 0
 {
 	unsigned int start = 0, end = 0;
-	unsigned int flag_collaborate = 0;
 	MODIFY_HIRC(HIRC_24);
 	P10_QUASI_MODE;
 	enable_Timer2_IC2();
