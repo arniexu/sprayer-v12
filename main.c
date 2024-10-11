@@ -160,7 +160,7 @@ int startup_task (void) _task_ 0
 				beeper_2hz();
 			}
 		}	// 右侧或者左侧还在设置时间
-		else if(tButton != 0)
+		else if(tButton != 0 && !learning)
 		{
 			spraying = SPRAY_IDLE;
 			beeper_once();

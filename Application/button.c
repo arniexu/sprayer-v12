@@ -4,7 +4,6 @@
 #include "timer.h"
 #include "systick.h"
 #include <RTX51TNY.h>
-static unsigned int left_set_button_start = 0;
 extern sprayerNvType nv;
 #if 0
 void PinInterrupt_ISR (void) interrupt 7
@@ -134,6 +133,7 @@ unsigned char gpio_button_poll_unblocked(void)
 	return 0;
 }
 #endif
+
 /*
 功能描述：以阻塞式的方式获取按键键码
 按键描述：支持7个按键，分别是左侧上下调节和左侧设置键，右侧上下调节和右侧设置键，还有一个学码按键
@@ -144,85 +144,213 @@ unsigned char gpio_button_poll_unblocked(void)
 */
 unsigned char gpio_button_poll_blocked(unsigned char prev)
 {
-		unsigned int now = 0;
-		unsigned int duration = 0;
-        static unsigned int pressed = FALSE;
+        static unsigned int left_set_pressed = FALSE;
+        static unsigned int left_set_button_start = 0;
+        static unsigned int right_set_button_pressed = FALSE;
+        static unsigned int right_set_button_start = 0;
+        static unsigned int right_up_button_start = 0;
+        static unsigned int right_up_button_pressed = 0;
+        static unsigned int right_down_button_start = 0;
+        static unsigned int right_down_button_pressed = 0;
+        static unsigned int left_up_button_start = 0;
+        static unsigned int left_up_button_pressed = 0;
+        static unsigned int left_down_button_start = 0;
+        static unsigned int left_down_button_pressed = 0;
         if(left_set_button == 0)
         {
             if(left_set_button_start > 0)
             {
                 if (get_Timer1_Systemtick() - left_set_button_start > 800
-                    && pressed == 1)
+                    && left_set_pressed == 1)
                 {
-                    pressed = 2;
+                    left_set_pressed = 2;
                     return LEFT_SET_LONG_BUTTON;
                 }
-                else if (get_Timer1_Systemtick() - left_set_button_start > 30
-                    && !pressed)
+                else if (get_Timer1_Systemtick() - left_set_button_start > 20
+                    && !left_set_pressed)
                 {
-                    pressed = 1;
+                    left_set_pressed = 1;
                     return LEFT_SET_BUTTON;
                 }
-                else if(pressed == 5)
+                else if(left_set_pressed == 5)
                 {
                     ; // nothing 	
                 }
             }
             else {
-                pressed = 0;
+                left_set_pressed = 0;
                 left_set_button_start = get_Timer1_Systemtick();
             }
         }
         else
         {
             left_set_button_start = 0;
-            pressed = 0;
+            left_set_pressed = 0;
         }
         if (right_up_button == 0)
         {
-            if(prev == RIGHT_UP_BUTTON)
-                Timer1_Delay2Dot54ms_blocked(get_Timer1_Systemtick(), 5);
-            else
-                Timer1_Delay2Dot54ms_blocked(get_Timer1_Systemtick(), 80);
-            if (right_up_button == 0)
-                return RIGHT_UP_BUTTON;
-        }
-        else if(right_down_button == 0)
-        {
-            if(prev == RIGHT_DOWN_BUTTON)
-                Timer1_Delay2Dot54ms_blocked(get_Timer1_Systemtick(), 5);
+            if(right_up_button_start > 0)
+            {
+                if(get_Timer1_Systemtick() - right_up_button_start > 400)
+                {
+                    if (right_up_button_pressed == 1)
+                    {
+                        right_up_button_pressed = 2;
+                        return RIGHT_UP_BUTTON;
+                    }
+                    else if(right_up_button_pressed == 2)
+                    {
+                        if ((get_Timer1_Systemtick() - right_up_button_start) % 5 == 4)
+                            return RIGHT_UP_BUTTON;
+                    }
+                }
+                else if(get_Timer1_Systemtick() - right_up_button_start > 20
+                    && !right_up_button_pressed)
+                {
+                    right_up_button_pressed = 1;
+                    return RIGHT_UP_BUTTON;
+                }
+            }
             else
             {
-                Timer1_Delay2Dot54ms_blocked(get_Timer1_Systemtick(), 80);
+                right_up_button_pressed = 0;
+                right_up_button_start = get_Timer1_Systemtick();
             }
-                if (right_down_button == 0)
+        }
+        else
+        {
+            right_up_button_pressed = 0;
+            right_up_button_start = 0;
+        }
+
+        if(right_down_button == 0)
+        {
+            if(right_down_button_start > 0)
+            {
+                if(get_Timer1_Systemtick() - right_down_button_start > 400)
+                {
+                    if (right_down_button_pressed == 1)
+                    {
+                        right_down_button_pressed = 2;
+                        return RIGHT_DOWN_BUTTON;
+                    }
+                    else if(right_down_button_pressed == 2)
+                    {
+                        if ((get_Timer1_Systemtick() - right_down_button_start) % 5 == 4)
+                            return RIGHT_DOWN_BUTTON;
+                    }
+                }
+                else if(get_Timer1_Systemtick() - right_down_button_start > 20
+                    && !right_down_button_pressed)
+                {
+                    right_down_button_pressed = 1;
                     return RIGHT_DOWN_BUTTON;
+                }
+            }
+            else
+            {
+                right_down_button_pressed = 0;
+                right_down_button_start = get_Timer1_Systemtick();
+            }
         }
-        else if(right_set_button == 0)
-        {	
-                Timer1_Delay2Dot54ms_blocked(get_Timer1_Systemtick(), 80);
-                if (right_set_button == 0)
+        else
+        {
+            right_down_button_pressed = 0;
+            right_down_button_start = 0;
+        }
+        if(right_set_button == 0)
+        {
+            if(right_set_button_start > 0)
+            {
+                if(get_Timer1_Systemtick() - right_set_button_start > 20
+                    && !right_set_button_pressed)
+                {
+                    right_set_button_pressed = 1;
                     return RIGHT_SET_BUTTON;
-        }
-        else if(left_up_button == 0)
-        {
-            if(prev == LEFT_UP_BUTTON)
-                Timer1_Delay2Dot54ms_blocked(get_Timer1_Systemtick(), 5);
+                }
+            }
             else
-                Timer1_Delay2Dot54ms_blocked(get_Timer1_Systemtick(), 80);
-            if (left_up_button == 0)
-                return LEFT_UP_BUTTON;
+            {
+                right_set_button_pressed = 0;
+                right_set_button_start = get_Timer1_Systemtick();
+            }
         }
-        else if(left_down_button == 0)
+        else
         {
-            if(prev == LEFT_DOWN_BUTTON)
-                Timer1_Delay2Dot54ms_blocked(get_Timer1_Systemtick(), 5);
+            right_set_button_pressed = 0;
+            right_set_button_start = 0;
+        }
+        if(left_up_button == 0)
+        {
+            if(left_up_button_start > 0)
+            {
+                if(get_Timer1_Systemtick() - left_up_button_start > 400)
+                {
+                    if (left_up_button_pressed == 1)
+                    {
+                        left_up_button_pressed = 2;
+                        return LEFT_UP_BUTTON;
+                    }
+                    else if(left_up_button_pressed == 2)
+                    {
+                        if ((get_Timer1_Systemtick() - left_up_button_start) % 5 == 4)
+                            return LEFT_UP_BUTTON;
+                    }
+                }
+                else if(get_Timer1_Systemtick() - left_up_button_start > 20
+                    && !left_up_button_pressed)
+                {
+                    left_up_button_pressed = 1;
+                    return LEFT_UP_BUTTON;
+                }
+            }
             else
-                Timer1_Delay2Dot54ms_blocked(get_Timer1_Systemtick(), 80);
-                if (left_down_button == 0)
+            {
+                left_up_button_pressed = 0;
+                left_up_button_start = get_Timer1_Systemtick();
+            }
+        }
+        else
+        {
+            left_up_button_pressed = 0;
+            left_up_button_start = 0;
+        }
+        if(left_down_button == 0)
+        {
+            if(left_down_button_start > 0)
+            {
+                if(get_Timer1_Systemtick() - left_down_button_start > 400)
+                {
+                    if (left_down_button_pressed == 1)
+                    {
+                        left_down_button_pressed = 2;
+                        return LEFT_DOWN_BUTTON;
+                    }
+                    else if(left_down_button_pressed == 2)
+                    {
+                        if ((get_Timer1_Systemtick() - left_down_button_start) % 5 == 4)
+                            return LEFT_DOWN_BUTTON;
+                    }
+                }
+                else if(get_Timer1_Systemtick() - left_down_button_start > 20
+                    && !left_down_button_pressed)
+                {
+                    left_down_button_pressed = 1;
                     return LEFT_DOWN_BUTTON;
+                }
+            }
+            else
+            {
+                left_down_button_pressed = 0;
+                left_down_button_start = get_Timer1_Systemtick();
+            }
         }
-        else if(learn_button == 0)
+        else
+        {
+            left_down_button_pressed = 0;
+            left_down_button_start = 0;
+        }
+        if(learn_button == 0)
         {
             Timer1_Delay2Dot54ms_blocked(get_Timer1_Systemtick(), 50);
             if (learn_button == 0)
