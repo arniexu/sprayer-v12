@@ -193,7 +193,7 @@ static unsigned char is_learn_button_long_pressed(void)
 	while (learn_button == 0)
 	{
 		Timer1_Delay2Dot54ms_Unblocked(get_Timer1_Systemtick(), 2);
-		if (get_Timer1_Systemtick() - now > 800)
+		if (get_Timer1_Systemtick() - now > 1200)
 			return LEARN_LONG_BUTTON;
 	}
 	return 0;
