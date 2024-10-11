@@ -140,7 +140,7 @@ int beeper_job()
 		unsigned int period = 0;
 		if(beeperFlag & BEEP_ONCE)
 		{
-			if(get_Timer1_Systemtick() - beeper_start < 50)
+			if(get_Timer1_Systemtick() - beeper_start < 40)
 				beeper = 1;
 			else
 			{
