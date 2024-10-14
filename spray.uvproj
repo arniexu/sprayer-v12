@@ -384,7 +384,7 @@
             <File>
               <FileName>Conf_tny.A51</FileName>
               <FileType>2</FileType>
-              <FilePath>..\spray\RTXTiny2\Conf_tny.A51</FilePath>
+              <FilePath>.\RTXTiny2\Conf_tny.A51</FilePath>
             </File>
           </Files>
         </Group>

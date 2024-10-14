@@ -295,7 +295,7 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\spray\RTXTiny2\Conf_tny.A51</PathWithFileName>
+      <PathWithFileName>.\RTXTiny2\Conf_tny.A51</PathWithFileName>
       <FilenameWithoutPath>Conf_tny.A51</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
