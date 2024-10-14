@@ -16,6 +16,7 @@ struct rfCode {
 	unsigned char level;
   unsigned int duration;
 };
+// 保存遥控器发过来的键码
 unsigned int tButton = 0;
 static xdata struct rfCode g_codes[MAX_TRIGGER] = {0};
 //@TODO: save into flash
@@ -76,7 +77,7 @@ void start_Timer1_SystemTick (void)
 }
 
 /************************************************************************************************************/
-/*    Capture interrupt subroutine                                                                   */
+/*    输入捕获中断监听P10                                                                   */
 /************************************************************************************************************/
 void Capture_ISR (void) interrupt 12
 {

@@ -198,17 +198,26 @@ static unsigned char is_learn_button_long_pressed(void)
 	}
 	return 0;
 }
+
+// 学码流程
 void learn_code(sprayerNvType *nv, unsigned int* learning)
 {
+	// 获取当前运行时间的系统滴答个数，从上电开始2.54ms的个数
 	unsigned int now = get_Timer1_Systemtick();
 	unsigned int now1 = 0;
+	// 检查当前是不是在学码模式下
 	if (nv->left_mode != LEARN_MODE || nv->right_mode != LEARN_MODE)
 		return;
+	// 倒数8s等待遥控信号
+	// tButton 遥控按钮的键码
 	while(get_Timer1_Systemtick() - now < 400*8 && tButton == 0)
 	{
+		// 学码模式下长按学码键
 		if (is_learn_button_long_pressed())
 		{
+			// 蜂鸣器响一声
 			beeper_once();
+			// 清除之前配对的遥控器的地址
 			clearAddress();
 			break;
 		}

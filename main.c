@@ -45,27 +45,38 @@ unsigned char spraying = SPRAY_IDLE;
 unsigned int learning = FALSE;
 sprayerNvType nv = {0};
 
+// 按键处理任务
 void business_logic() _task_ 2
 {
 	unsigned char previous = 0;
 	unsigned char button = 0;
+	// 初始化gpio-按键
 	gpio_button_init_poll();
+	// 初始化gpio-后面端子
 	input_signal_init();
+	// 加载上次上电保存的参数
 	readFlash(&nv);
+	// 设置要显示默认画面
 	nv.left_mode = LEFT_TIME_EFFECTIVE_MODE;
 	nv.right_mode = RIGHT_TIME_EFFECTIVE_MODE;
+	// 设置要进入喷淋的初始状态
 	spraying = SPRAY_IDLE;
+	// 处理当前模式下的按键
 	left_button_logic(button);
 	right_button_logic(button);
 	while(1)
 	{
-		button = gpio_button_poll_blocked(previous);	
+		// 扫描按键 - 短按（0.5-2） 长按（2-3） 连按（>3)
+		button = gpio_button_poll_blocked(previous);
+		//  检查键值是有效的并且当前喷淋模式是空闲或者缺水等待状态
 		if (isButtonCodeValid(button) && (spraying == SPRAY_IDLE || spraying == SPRAY_WAITING))
 		{
+			// 检测是不同的按键键值
 			if (previous != button)  // button is not pressed consecutively
 				beeper_once();
 			left_button_logic(button);
 			right_button_logic(button);
+			// 记录当前键值给下一次扫描用
 			previous = button;
 			button = 0;
 			left_button_logic(button);
