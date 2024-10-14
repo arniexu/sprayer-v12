@@ -449,7 +449,7 @@
             <File>
               <FileName>common.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\spray - v6\StdDriver\src\common.c</FilePath>
+              <FilePath>.\StdDriver\src\common.c</FilePath>
             </File>
           </Files>
         </Group>
