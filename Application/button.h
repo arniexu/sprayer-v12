@@ -67,5 +67,6 @@ unsigned char gpio_button_poll_unblocked(void);
 unsigned char gpio_button_id(unsigned char cod);
 void left_button_logic(unsigned int but);
 void right_button_logic(unsigned int but);
+unsigned char no_beep_for_button();
 
 #endif

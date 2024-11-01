@@ -72,7 +72,7 @@ void business_logic() _task_ 2
 		if (isButtonCodeValid(button) && (spraying == SPRAY_IDLE || spraying == SPRAY_WAITING))
 		{
 			// 检测是不同的按键键值
-			if (previous != button)  // button is not pressed consecutively
+			if (previous != button && !no_beep_for_button())  // button is not pressed consecutively
 				beeper_once();
 			left_button_logic(button);
 			right_button_logic(button);

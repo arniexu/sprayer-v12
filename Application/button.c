@@ -142,20 +142,20 @@ unsigned char gpio_button_poll_unblocked(void)
 长按定义：按下时间在2s以上即为长按，产生长按事件前必先有短按事件
 连按定义：按下时间在75ms以上均为连按，75ms以后每5ms产生一次按键事件
 */
+static unsigned int left_set_pressed = FALSE;
+static unsigned int left_set_button_start = 0;
+static unsigned int right_set_button_pressed = FALSE;
+static unsigned int right_set_button_start = 0;
+static unsigned int right_up_button_start = 0;
+static unsigned int right_up_button_pressed = 0;
+static unsigned int right_down_button_start = 0;
+static unsigned int right_down_button_pressed = 0;
+static unsigned int left_up_button_start = 0;
+static unsigned int left_up_button_pressed = 0;
+static unsigned int left_down_button_start = 0;
+static unsigned int left_down_button_pressed = 0;
 unsigned char gpio_button_poll_blocked(unsigned char prev)
 {
-        static unsigned int left_set_pressed = FALSE;
-        static unsigned int left_set_button_start = 0;
-        static unsigned int right_set_button_pressed = FALSE;
-        static unsigned int right_set_button_start = 0;
-        static unsigned int right_up_button_start = 0;
-        static unsigned int right_up_button_pressed = 0;
-        static unsigned int right_down_button_start = 0;
-        static unsigned int right_down_button_pressed = 0;
-        static unsigned int left_up_button_start = 0;
-        static unsigned int left_up_button_pressed = 0;
-        static unsigned int left_down_button_start = 0;
-        static unsigned int left_down_button_pressed = 0;
         if(left_set_button == 0)
         {
             if(left_set_button_start > 0)
@@ -200,6 +200,7 @@ unsigned char gpio_button_poll_blocked(unsigned char prev)
                     }
                     else if(right_up_button_pressed == 2)
                     {
+												right_up_button_pressed = 3;
                         if ((get_Timer1_Systemtick() - right_up_button_start) % 5 == 4)
                             return RIGHT_UP_BUTTON;
                     }
@@ -236,6 +237,7 @@ unsigned char gpio_button_poll_blocked(unsigned char prev)
                     }
                     else if(right_down_button_pressed == 2)
                     {
+												right_down_button_pressed = 3;
                         if ((get_Timer1_Systemtick() - right_down_button_start) % 5 == 4)
                             return RIGHT_DOWN_BUTTON;
                     }
@@ -293,6 +295,7 @@ unsigned char gpio_button_poll_blocked(unsigned char prev)
                     }
                     else if(left_up_button_pressed == 2)
                     {
+												left_up_button_pressed = 3;
                         if ((get_Timer1_Systemtick() - left_up_button_start) % 5 == 4)
                             return LEFT_UP_BUTTON;
                     }
@@ -328,6 +331,7 @@ unsigned char gpio_button_poll_blocked(unsigned char prev)
                     }
                     else if(left_down_button_pressed == 2)
                     {
+												left_down_button_pressed = 3;
                         if ((get_Timer1_Systemtick() - left_down_button_start) % 5 == 4)
                             return LEFT_DOWN_BUTTON;
                     }
@@ -359,6 +363,15 @@ unsigned char gpio_button_poll_blocked(unsigned char prev)
 		return 0;
 }
 
+unsigned char no_beep_for_button()
+{
+	if(right_up_button_pressed == 3
+		|| right_down_button_pressed == 3
+		|| left_up_button_pressed == 3
+		|| left_down_button_pressed == 3)
+		return TRUE;
+	return FALSE;
+}
 #if 0
 unsigned char gpio_button_id(unsigned char cod)
 {
